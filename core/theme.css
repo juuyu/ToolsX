@@ -1,0 +1,53 @@
+/* ============================================================
+   Tools-X · 设计变量（浅色 / 深色）
+   app.html 与本地文件预览页共用。本文件只定义变量，不产生视觉样式。
+   预览页通过 data-theme 切换深浅色，因此变量挂在 :root 上即可。
+============================================================ */
+:root{
+  color-scheme:light;
+  --paper:#FAF9F5;
+  --paper-deep:#F2EFE7;
+  --panel:#FFFFFF;
+  --ink:#1F1E1D;
+  --ink-2:#55524B;
+  --ink-3:#8B867C;
+  --line:#E7E2D6;
+  --line-2:#DDD6C6;
+  --accent:#C96442;
+  --accent-deep:#A84E30;
+  --accent-soft:#F7EDE6;
+  --accent-wash:#FBF3EC;
+  --green:#6E8B5E;
+  --green-soft:#EDF2E8;
+  --code-bg:#262524;
+  --code-ink:#E8E4DB;
+  --shadow-sm:0 1px 2px rgba(31,30,29,.05);
+  --shadow-md:0 2px 8px rgba(31,30,29,.06),0 8px 24px rgba(31,30,29,.05);
+  --shadow-lg:0 4px 16px rgba(31,30,29,.08),0 16px 48px rgba(31,30,29,.10);
+  --r-sm:8px;--r-md:12px;--r-lg:16px;
+  --serif:'Lora',Georgia,serif;
+  --sans:'Instrument Sans',-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',Menlo,monospace;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#211F1E;
+  --paper-deep:#2A2827;
+  --panel:#2E2B29;
+  --ink:#EDEAE2;
+  --ink-2:#B5AFA2;
+  --ink-3:#8A8478;
+  --line:#3A3733;
+  --line-2:#4C4741;
+  --accent:#D87A56;
+  --accent-deep:#E2926E;
+  --accent-soft:#3E2D23;
+  --accent-wash:#352A22;
+  --green:#93B17F;
+  --green-soft:#2F3629;
+  --code-bg:#1B1A19;
+  --code-ink:#DAD5CA;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 2px 8px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.3);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.4),0 16px 48px rgba(0,0,0,.4);
+}

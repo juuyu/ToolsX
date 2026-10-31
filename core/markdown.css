@@ -1,0 +1,48 @@
+/* ============================================================
+   Tools-X · Markdown 渲染 + 代码高亮 token + 标题树条目
+   Docs 预览（.md）与本地 .md 文件预览页（.tx-md）共用，
+   两处类名不同但视觉规范一致，故在此合并选择器。
+============================================================ */
+.md,.tx-md{font-size:14px;line-height:1.85;color:var(--ink);word-wrap:break-word}
+.md>*:first-child,.tx-md>*:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6,
+.tx-md h1,.tx-md h2,.tx-md h3,.tx-md h4,.tx-md h5,.tx-md h6{font-family:var(--serif);font-weight:600;margin:1.2em 0 .5em;line-height:1.35}
+.md h1,.tx-md h1{font-size:24px;border-bottom:1px solid var(--line);padding-bottom:.3em}
+.md h2,.tx-md h2{font-size:19px}
+.md h3,.tx-md h3{font-size:16.5px}
+.md h4,.tx-md h4{font-size:14.5px}
+.md h5,.md h6,.tx-md h5,.tx-md h6{font-size:13.5px;color:var(--ink-2)}
+.md p,.tx-md p{margin:.6em 0}
+.md a,.tx-md a{color:var(--accent-deep);text-decoration:underline;text-underline-offset:3px}
+.md code,.tx-md code{font-family:var(--mono);font-size:.86em;background:var(--paper-deep);padding:.15em .45em;border-radius:5px}
+.md pre,.tx-md pre{background:var(--code-bg);color:var(--code-ink);border-radius:var(--r-sm);padding:14px 16px;overflow:auto;margin:.8em 0}
+.md pre code,.tx-md pre code{background:none;color:inherit;padding:0;font-size:12.5px;line-height:1.7}
+.md blockquote,.tx-md blockquote{border-left:3px solid var(--accent);background:var(--accent-wash);margin:.8em 0;padding:.5em 1em;border-radius:0 var(--r-sm) var(--r-sm) 0;color:var(--ink-2)}
+.md ul,.md ol,.tx-md ul,.tx-md ol{padding-left:1.5em;margin:.5em 0}
+.md li,.tx-md li{margin:.25em 0}
+.md hr,.tx-md hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
+.md table,.tx-md table{border-collapse:collapse;margin:.8em 0;width:100%;font-size:13px}
+.md th,.md td,.tx-md th,.tx-md td{border:1px solid var(--line);padding:6px 12px;text-align:left;word-break:break-word}
+.md th,.tx-md th{background:var(--paper-deep);font-weight:600}
+.md input[type=checkbox],.tx-md input[type=checkbox]{accent-color:var(--accent);margin-right:.4em}
+.md img,.tx-md img{display:block;max-width:100%;height:auto;border-radius:var(--r-sm);margin:.8em 0}
+.md .task,.tx-md .task{display:inline-flex;align-items:baseline}
+/* 文档内跳转锚点：预览页额外需要让出顶部工具栏高度 */
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{scroll-margin-top:8px}
+
+/* 代码高亮 token（ck-*，零依赖） */
+.ck-c{color:#8A8478;font-style:italic}
+.ck-s{color:#4E7E4E}.ck-n{color:#3E6E96}.ck-k{color:#B3402A;font-weight:600}.ck-b{color:#8E5E9E}
+.ck-add{color:#4E7E4E}.ck-del{color:#B3402A}.ck-meta{color:#8A6D3B;font-weight:600}
+:root[data-theme="dark"] .ck-c{color:#8C857A}
+:root[data-theme="dark"] .ck-s{color:#9CC28B}
+:root[data-theme="dark"] .ck-n{color:#7FB0D8}
+:root[data-theme="dark"] .ck-k{color:#E08A73}
+:root[data-theme="dark"] .ck-b{color:#C39BD6}
+:root[data-theme="dark"] .ck-add{color:#9CC28B}
+:root[data-theme="dark"] .ck-del{color:#E08A73}
+:root[data-theme="dark"] .ck-meta{color:#D9BC7A}
+
+/* 标题树条目（Docs 右侧目录 / 预览页目录） */
+.toc-item{display:block;width:100%;padding:5px 8px 5px calc(9px + var(--toc-d,0) * 13px);border:none;border-radius:6px;background:none;color:var(--ink-2);font-family:inherit;font-size:12.5px;line-height:1.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:background .13s,color .13s}
+.toc-item:hover{background:var(--accent-wash);color:var(--accent-deep)}

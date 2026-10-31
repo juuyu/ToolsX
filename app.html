@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools-X · Docs / JSON / Postman</title>
+<link rel="icon" href="icons/icon48.png">
+<script>(function(){var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})();</script>
+<link rel="stylesheet" href="core/theme.css">
+<link rel="stylesheet" href="core/core.css">
+<link rel="stylesheet" href="core/markdown.css">
+<link rel="stylesheet" href="tools/docs/docs.css">
+<link rel="stylesheet" href="tools/json/json.css">
+<link rel="stylesheet" href="tools/postman/postman.css">
+</head>
+<body>
+<div class="app">
+  <div class="main">
+    <div class="topbar">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+        <input id="search" type="text" placeholder="搜索笔记名称或内容…  / 聚焦">
+      </div>
+      <div class="spacer" style="flex:1"></div>
+      <button class="theme-btn" id="themeBtn" title="切换深浅模式" aria-label="切换深浅模式">
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"></path></svg>
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </button>
+      <button class="btn btn-accent" id="addBtn" style="display:inline-flex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        <span id="addLabel">新建笔记</span>
+      </button>
+    </div>
+    <div class="content">
+
+      <section class="view" id="view-docs">
+        <div class="page-head"><h2>Docs</h2><p>多级目录文档 · Markdown / JSON 双格式 · 拖拽整理 · 自动保存</p></div>
+        <div class="docs-layout tree-collapsed" id="docsLayout">
+          <div class="docs-tree">
+            <div class="docs-tools">
+              <button class="mini" onclick="newNote(null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>新建笔记</button>
+              <button class="mini" onclick="newFolder(null)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>文件夹</button>
+              <button class="mini mini-ico" id="foldAllBtn" title="全部折叠" onclick="toggleAllFolders()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"></polyline><polyline points="17 18 12 13 7 18"></polyline></svg></button>
+              <button class="mini mini-ico" title="收起目录" onclick="toggleDocsTree()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            </div>
+            <div class="tree" id="docTree"><div class="tree-row open" draggable="true" data-id="mvfee27stk14c" onclick="toggleFolder('mvfee27stk14c')">
+      <span class="tw"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+      <svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>
+      <span class="t-name">欢迎</span>
+      <span class="t-acts">
+        <button class="icon-btn" title="新建笔记" onclick="event.stopPropagation();newNote('mvfee27stk14c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <button class="icon-btn" title="新建子文件夹" onclick="event.stopPropagation();newFolder('mvfee27stk14c')"><svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg></button>
+        <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27stk14c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+        <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27stk14c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+      </span>
+    </div><div class="tree-kids"><div class="tree-row sel" draggable="true" data-id="mvfee27sz4wa2" onclick="selectNote('mvfee27sz4wa2')">
+    <span class="tw"></span><svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
+    <span class="t-name">使用指南</span>
+    <span class="t-acts">
+      <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27sz4wa2')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+      <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27sz4wa2')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+    </span>
+  </div><div class="tree-row " draggable="true" data-id="mvfee27s0ffoe" onclick="selectNote('mvfee27s0ffoe')">
+    <span class="tw"></span><svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5c0 1.1.9 2 2 2h1"></path><path d="M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1"></path></svg>
+    <span class="t-name">示例配置</span>
+    <span class="t-acts">
+      <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27s0ffoe')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+      <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27s0ffoe')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+    </span>
+  </div></div><div class="tree-row open" draggable="true" data-id="mvfee27slk3gx" onclick="toggleFolder('mvfee27slk3gx')">
+      <span class="tw"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+      <svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>
+      <span class="t-name">AI 笔记</span>
+      <span class="t-acts">
+        <button class="icon-btn" title="新建笔记" onclick="event.stopPropagation();newNote('mvfee27slk3gx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <button class="icon-btn" title="新建子文件夹" onclick="event.stopPropagation();newFolder('mvfee27slk3gx')"><svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg></button>
+        <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27slk3gx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+        <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27slk3gx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+      </span>
+    </div><div class="tree-kids"><div class="tree-row open" draggable="true" data-id="mvfee27shbjb0" onclick="toggleFolder('mvfee27shbjb0')">
+      <span class="tw"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
+      <svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>
+      <span class="t-name">MCP</span>
+      <span class="t-acts">
+        <button class="icon-btn" title="新建笔记" onclick="event.stopPropagation();newNote('mvfee27shbjb0')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></button>
+        <button class="icon-btn" title="新建子文件夹" onclick="event.stopPropagation();newFolder('mvfee27shbjb0')"><svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg></button>
+        <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27shbjb0')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+        <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27shbjb0')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+      </span>
+    </div><div class="tree-kids"><div class="tree-row " draggable="true" data-id="mvfee27s88awv" onclick="selectNote('mvfee27s88awv')">
+    <span class="tw"></span><svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
+    <span class="t-name">MCP 学习笔记</span>
+    <span class="t-acts">
+      <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27s88awv')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+      <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27s88awv')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+    </span>
+  </div></div><div class="tree-row " draggable="true" data-id="mvfee27s9wdx5" onclick="selectNote('mvfee27s9wdx5')">
+    <span class="tw"></span><svg class="f-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>
+    <span class="t-name">Prompt 技巧</span>
+    <span class="t-acts">
+      <button class="icon-btn" title="重命名" onclick="event.stopPropagation();renameNode('mvfee27s9wdx5')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 114 4L7.5 20.5 2 22l1.5-5.5z"></path></svg></button>
+      <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27s9wdx5')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
+    </span>
+  </div></div></div>
+          </div>
+          <button class="docs-toggle" id="docsToggle" title="展开目录" onclick="toggleDocsTree()" style="position: relative;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span class="dt-label">目录</span></button>
+          <div class="docs-editor" id="docEditorPanel">
+    <div class="de-head">
+      <span class="de-title">使用指南</span>
+      <span class="de-meta">10/19 23:17</span>
+      <div class="seg"><button class="" onclick="setDocMode('edit')">源码</button><button class="on" onclick="setDocMode('view')">预览</button></div>
+      <button class="icon-btn" id="liveToggle" title="解锁预览（点击区块编辑）" style=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg></button>
+    </div>
+    <div class="de-body">
+      <textarea id="docEditor" class="hide" placeholder="# 开始书写 Markdown …"></textarea>
+      <div id="docPreview" class="md "><div class="blk" data-i="0"><h1>欢迎使用 Docs</h1></div><div class="blk" data-i="1"><p>这里是 Tools-X 的内置笔记，支持 <strong>多级目录</strong> 与 Markdown 书写。</p></div><div class="blk" data-i="2"><h2>基本操作</h2></div><div class="blk" data-i="3"><ul><li>左侧目录树支持 <strong>拖拽</strong> 整理</li><li>悬停文件夹行可新建子笔记 / 子文件夹</li><li>编辑自动保存，右上角可切换 源码 / 预览</li></ul></div><div class="blk" data-i="4"><h2>Markdown 支持</h2></div><div class="blk" data-i="5"><ol><li>行内语法：<strong>加粗</strong>、<em>斜体</em>、<del>删除线</del>、<code>行内代码</code></li><li>任务清单：<ul><li><span class="task"><input type="checkbox" disabled="" checked="">多级目录</span></li><li><span class="task"><input type="checkbox" disabled="" checked="">Markdown 渲染</span></li><li><span class="task"><input type="checkbox" disabled="">你的第一条笔记</span></li></ul></li><li>代码块、表格、引用</li></ol></div><div class="blk" data-i="6"><blockquote><p>提示：顶部搜索框可以直接搜笔记名称与内容。</p></blockquote></div><div class="blk" data-i="7"><pre><code>console.log("Hello Tools-X");</code></pre></div><div class="blk" data-i="8"><table><thead><tr><th>语法</th><th>说明</th></tr></thead><tbody><tr><td>#</td><td>标题</td></tr><tr><td>- / 1.</td><td>列表</td></tr><tr><td>&gt;</td><td>引用</td></tr></tbody></table></div></div>
+    </div></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-json">
+        <div class="page-head page-head-row">
+          <div><h2>JSON 工具</h2><p>格式化 · 压缩 · 转义 · 比对</p></div>
+          <div class="toolbar" style="margin:0" id="jsonTabs"></div>
+        </div>
+        <div class="json-panel hide" id="jsonFormat">
+          <div class="json-two">
+            <div class="field"><label>输入</label><textarea id="jfIn" placeholder="{ &quot;key&quot;: &quot;value&quot; }"></textarea></div>
+            <div class="field"><label>输出</label><div class="jf-bar"><div class="jf-qwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input id="jfQ" placeholder="在结果中搜索…"></div><span class="jf-qn" id="jfQn"></span><button class="jf-nav" onclick="jfNav(-1)" title="上一个（Shift+Enter）">↑</button><button class="jf-nav" onclick="jfNav(1)" title="下一个（Enter）">↓</button></div><pre class="code-block jf-out" id="jfOut"><span style="opacity:.45">结果将显示在这里</span></pre></div>
+          </div>
+          <div class="json-actions">
+            <button class="btn btn-primary btn-sm" onclick="jfmt(2)">格式化</button>
+            <button class="btn btn-ghost btn-sm" onclick="jfmt(0)">压缩</button>
+            <button class="btn btn-ghost btn-sm" onclick="jesc()">转义</button>
+            <button class="btn btn-ghost btn-sm" onclick="junes()">转义还原</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyJfOut()">复制输出</button>
+          </div>
+          <div class="json-msg" id="jfMsg"></div>
+        </div>
+        <div class="json-panel hide" id="jsonDiff">
+          <div class="json-two">
+            <div class="field"><label>JSON A</label><textarea id="jdA" placeholder="{&quot;a&quot;:1,&quot;b&quot;:[1,2]}"></textarea></div>
+            <div class="field"><label>JSON B</label><textarea id="jdB" placeholder="{&quot;a&quot;:2,&quot;c&quot;:3}"></textarea></div>
+          </div>
+          <div class="json-actions"><button class="btn btn-accent btn-sm" onclick="jdCompare()">比对</button></div>
+          <div class="json-msg" id="jdMsg"></div>
+          <div id="jdResult" style="margin-top:14px"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-api">
+        <div class="page-head">
+          <h2>Postman</h2>
+        </div>
+        <div class="api-layout" id="apiLayout">
+          <aside class="api-side">
+            <div class="docs-tools">
+              <button class="mini" onclick="apiFolderCreate()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>New folder
+              </button>
+              <button class="mini" onclick="apiAddRequest()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add request
+              </button>
+              <button class="mini mini-ico" id="apiFoldAllBtn" title="Collapse all" onclick="toggleAllApiFolders()"></button>
+            </div>
+            <div class="docs-tools">
+              <button class="mini" onclick="apiImport()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><polyline points="8 10 12 14 16 10"></polyline><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>Import
+              </button>
+              <button class="mini" onclick="apiExport()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14V3"></path><polyline points="8 7 12 3 16 7"></polyline><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>Export
+              </button>
+            </div>
+            <input type="file" id="apiImportFile" accept=".json,application/json" style="display:none" onchange="apiImportFileChange(event)">
+            <div class="tree" id="apiFoldList"></div>
+          </aside>
+          <div class="api-main">
+            <div class="api-card">
+              <div class="api-head">
+                <input id="apiName" class="api-name" type="text" spellcheck="false" placeholder="Untitled request" oninput="apiNameInput(this.value)" onblur="apiNameBlur()">
+                <button class="btn btn-ghost btn-sm" id="apiShareBtn" onclick="apiShareCurrent()" title="Copy this request as JSON">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg>
+                  <span>Share</span>
+                </button>
+                <button class="btn btn-ghost btn-sm" id="apiImportOneBtn" onclick="apiImportOne()" title="Paste a request JSON to overwrite the current request">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"></path><polyline points="8 10 12 14 16 10"></polyline><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"></path></svg>
+                  <span>Import</span>
+                </button>
+              </div>
+              <div class="api-bar">
+                <div class="csel csel-method m-get" id="apiMethodSel" data-value="GET">
+                  <button type="button" class="csel-btn" onclick="cselToggle('apiMethodSel')" title="Request method">
+                    <span class="csel-val">GET</span>
+                    <svg class="csel-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
+                  <div class="csel-menu">
+                    <button type="button" class="csel-opt on" data-value="GET" onclick="cselPick('apiMethodSel','GET')">GET</button>
+                    <button type="button" class="csel-opt" data-value="POST" onclick="cselPick('apiMethodSel','POST')">POST</button>
+                    <button type="button" class="csel-opt" data-value="PUT" onclick="cselPick('apiMethodSel','PUT')">PUT</button>
+                    <button type="button" class="csel-opt" data-value="PATCH" onclick="cselPick('apiMethodSel','PATCH')">PATCH</button>
+                    <button type="button" class="csel-opt" data-value="DELETE" onclick="cselPick('apiMethodSel','DELETE')">DELETE</button>
+                    <button type="button" class="csel-opt" data-value="HEAD" onclick="cselPick('apiMethodSel','HEAD')">HEAD</button>
+                    <button type="button" class="csel-opt" data-value="OPTIONS" onclick="cselPick('apiMethodSel','OPTIONS')">OPTIONS</button>
+                  </div>
+                </div>
+                <div class="api-url">
+                  <input id="apiUrl" type="text" spellcheck="false" placeholder="https://api.example.com/users" oninput="apiUrlInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();sendApiReq()}">
+                </div>
+                <button class="btn btn-accent" id="apiSend" onclick="sendApiReq()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+                  <span id="apiSendLabel">Send</span>
+                </button>
+              </div>
+              <div class="api-tabs" id="apiReqTabs">
+                <button data-atab="params" onclick="setApiTab('params')">Params<span class="api-cnt" id="apiParamsN"></span></button>
+                <button data-atab="headers" onclick="setApiTab('headers')">Headers<span class="api-cnt" id="apiHeadersN"></span></button>
+                <button data-atab="body" onclick="setApiTab('body')">Body<span class="api-cnt" id="apiBodyN"></span></button>
+              </div>
+              <div class="api-pane" id="apiPane-params">
+                <div class="kv-list" id="apiParams"></div>
+                <button class="api-add" onclick="apiAddRow('params')">+ Add param</button>
+              </div>
+              <div class="api-pane hide" id="apiPane-headers">
+                <div class="kv-list" id="apiHeaders"></div>
+                <button class="api-add" onclick="apiAddRow('headers')">+ Add header</button>
+              </div>
+              <div class="api-pane hide" id="apiPane-body">
+                <div class="api-body-top">
+                  <span class="api-body-lbl">Type</span>
+                  <div class="csel csel-body" id="apiBodyTypeSel" data-value="none">
+                    <button type="button" class="csel-btn" onclick="cselToggle('apiBodyTypeSel')" title="Body type">
+                      <span class="csel-val">none</span>
+                      <svg class="csel-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="csel-menu">
+                      <button type="button" class="csel-opt on" data-value="none" onclick="cselPick('apiBodyTypeSel','none')">none</button>
+                      <button type="button" class="csel-opt" data-value="json" data-label="JSON" onclick="cselPick('apiBodyTypeSel','json')">JSON</button>
+                      <button type="button" class="csel-opt" data-value="text" data-label="Text" onclick="cselPick('apiBodyTypeSel','text')">Text</button>
+                      <button type="button" class="csel-opt" data-value="form" data-label="form-urlencoded" onclick="cselPick('apiBodyTypeSel','form')">form-urlencoded</button>
+                    </div>
+                  </div>
+                  <div class="spacer" style="flex:1"></div>
+                  <button class="btn btn-ghost btn-sm" id="apiBodyFmt" onclick="formatApiBody()">Format JSON</button>
+                </div>
+                <textarea id="apiBody" class="api-body" spellcheck="false" placeholder='{ "key": "value" }' oninput="apiBodyInput(this.value)"></textarea>
+                <div id="apiFormWrap" class="hide">
+                  <div class="kv-list" id="apiForm"></div>
+                  <button class="api-add" onclick="apiAddRow('form')">+ Add field</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="api-card api-resp">
+              <div class="api-resp-head">
+                <span class="api-resp-title">Response</span>
+                <span class="api-status hide" id="apiStatus"></span>
+                <span class="api-meta" id="apiMeta"></span>
+                <div class="spacer" style="flex:1"></div>
+                <div class="seg hide" id="apiRespSeg">
+                  <button class="on" data-rtab="body" onclick="setApiRespTab('body')">Body</button>
+                  <button data-rtab="headers" onclick="setApiRespTab('headers')">Headers</button>
+                </div>
+                <button class="btn btn-ghost btn-sm hide" id="apiFmtBtn" onclick="toggleApiPretty()">Raw</button>
+                <button class="btn btn-ghost btn-sm hide" id="apiExBtn" onclick="apiExampleAdd()" title="Save this response as an example of the request">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                  <span>Save example</span>
+                </button>
+                <button class="icon-btn hide" id="apiCopyBtn" title="Copy response body" onclick="copyApiResp()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
+                </button>
+              </div>
+              <div class="api-resp-body" id="apiRespBody">
+                <div class="api-empty">Send a request to see the response</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span id="toastMsg">已收起目录</span>
+</div>
+<script src="core/md-core.js"></script>
+<script src="core/core.js"></script>
+<script src="core/ui.js"></script>
+<script src="core/json-view.js"></script>
+<script src="tools/docs/docs.js"></script>
+<script src="tools/json/json.js"></script>
+<script src="tools/postman/postman.js"></script>
+<script src="core/app.js"></script>
+</body></html>

@@ -1,0 +1,37 @@
+/* ============================================================
+   Tools-X · 本地 JSON / JSONC 预览页补充样式
+   复用 md-page.css 中的预览外壳（工具栏 / 卡片 / 深浅色 / 高亮 token）
+============================================================ */
+/* 格式徽标 */
+.tx-fmt{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.1em;padding:3px 7px;border-radius:5px;background:var(--accent-wash);color:var(--accent-deep);white-space:nowrap}
+
+/* JSON 预览卡片 */
+.tx-doc-json{padding:26px 30px}
+.tx-json{margin:0;font-family:var(--mono);font-size:13px;line-height:1.8;tab-size:2;white-space:pre;overflow-x:auto;color:var(--ink)}
+
+/* 可折叠节点 */
+.jt-node{display:inline}
+.jt-car{display:inline-block;width:11px;color:var(--ink-3);cursor:pointer;user-select:none;transition:transform .15s}
+.jt-car:hover{color:var(--accent-deep)}
+.jt-node.closed>.jt-car{transform:rotate(-90deg)}
+.jt-h{cursor:pointer}
+.jt-h:hover{color:var(--accent-deep)}
+.jt-node.closed>.jt-h{display:none}
+.jt-node>.jt-ell{display:none}
+.jt-node.closed>.jt-ell{display:inline;cursor:pointer}
+.jt-node>.jt-count{display:none;color:var(--ink-3);font-style:italic}
+.jt-node.closed>.jt-count{display:inline;cursor:pointer}
+.jt-node.closed>.jt-kids{display:none}
+.jt-node.closed>.jt-cl{display:none}
+
+/* 解析失败提示 */
+.tx-err{margin:0 0 16px;padding:10px 12px;border:1px solid rgba(179,64,42,.26);border-radius:8px;background:rgba(179,64,42,.07);color:#B3402A;font-family:var(--mono);font-size:12px;line-height:1.65;word-break:break-word}
+:root[data-toolsx-preview][data-theme="dark"] .tx-err{border-color:rgba(224,138,115,.3);background:rgba(224,138,115,.09);color:#E08A73}
+
+@media (max-width:760px){
+  .tx-fmt{display:none}
+}
+@media (max-width:680px){
+  .tx-doc-json{padding:18px 14px}
+  .tx-json{font-size:12.5px}
+}

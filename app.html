@@ -153,32 +153,65 @@
       </section>
 
       <section class="view" id="view-json">
-        <div class="page-head page-head-row">
-          <div><h2>JSON 工具</h2><p>格式化 · 压缩 · 转义 · 比对</p></div>
-          <div class="toolbar" style="margin:0" id="jsonTabs"></div>
-        </div>
-        <div class="json-panel hide" id="jsonFormat">
-          <div class="json-two">
-            <div class="field"><label>输入</label><textarea id="jfIn" placeholder="{ &quot;key&quot;: &quot;value&quot; }"></textarea></div>
-            <div class="field"><label>输出</label><div class="jf-bar"><div class="jf-qwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input id="jfQ" placeholder="在结果中搜索…"></div><span class="jf-qn" id="jfQn"></span><button class="jf-nav" onclick="jfNav(-1)" title="上一个（Shift+Enter）">↑</button><button class="jf-nav" onclick="jfNav(1)" title="下一个（Enter）">↓</button></div><pre class="code-block jf-out" id="jfOut"><span style="opacity:.45">结果将显示在这里</span></pre></div>
+        <div class="page-head json-head">
+          <div class="json-head-l">
+            <h2>JSON 工具</h2>
+            <div class="toolbar json-tabs" id="jsonTabs"></div>
           </div>
-          <div class="json-actions">
+          <div class="toolbar json-acts" id="jsonActsFormat">
             <button class="btn btn-primary btn-sm" onclick="jfmt(2)">格式化</button>
             <button class="btn btn-ghost btn-sm" onclick="jfmt(0)">压缩</button>
             <button class="btn btn-ghost btn-sm" onclick="jesc()">转义</button>
             <button class="btn btn-ghost btn-sm" onclick="junes()">转义还原</button>
             <button class="btn btn-ghost btn-sm" onclick="copyJfOut()">复制输出</button>
           </div>
+          <div class="toolbar json-acts hide" id="jsonActsDiff">
+            <div class="seg json-seg" id="jdModeSeg">
+              <button class="on" data-jdm="json" onclick="setJdMode('json')">JSON 结构</button>
+              <button data-jdm="text" onclick="setJdMode('text')">纯文本</button>
+            </div>
+            <button class="btn btn-accent btn-sm" onclick="jdCompare()">比对</button>
+          </div>
+        </div>
+        <div class="json-panel" id="jsonFormat">
+          <div class="json-two">
+            <div class="json-col">
+              <div class="json-col-head"><span>输入</span></div>
+              <textarea id="jfIn" spellcheck="false" placeholder="{ &quot;key&quot;: &quot;value&quot; }"></textarea>
+            </div>
+            <div class="json-col">
+              <div class="json-col-head">
+                <span>格式化结果</span>
+                <div class="jf-bar">
+                  <div class="jf-qwrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input id="jfQ" placeholder="在结果中搜索…"></div>
+                  <span class="jf-qn" id="jfQn"></span>
+                  <button class="jf-nav" onclick="jfNav(-1)" title="上一个（Shift+Enter）">↑</button>
+                  <button class="jf-nav" onclick="jfNav(1)" title="下一个（Enter）">↓</button>
+                </div>
+              </div>
+              <pre class="code-block jf-out" id="jfOut"><span style="opacity:.45">结果将显示在这里</span></pre>
+            </div>
+          </div>
           <div class="json-msg" id="jfMsg"></div>
         </div>
         <div class="json-panel hide" id="jsonDiff">
-          <div class="json-two">
-            <div class="field"><label>JSON A</label><textarea id="jdA" placeholder="{&quot;a&quot;:1,&quot;b&quot;:[1,2]}"></textarea></div>
-            <div class="field"><label>JSON B</label><textarea id="jdB" placeholder="{&quot;a&quot;:2,&quot;c&quot;:3}"></textarea></div>
+          <div class="json-diff">
+            <div class="json-two jd-inputs">
+              <div class="json-col">
+                <div class="json-col-head"><span>JSON A</span></div>
+                <textarea id="jdA" spellcheck="false" placeholder="{&quot;a&quot;:1,&quot;b&quot;:[1,2]}"></textarea>
+              </div>
+              <div class="json-col">
+                <div class="json-col-head"><span>JSON B</span></div>
+                <textarea id="jdB" spellcheck="false" placeholder="{&quot;a&quot;:2,&quot;c&quot;:3}"></textarea>
+              </div>
+            </div>
+            <div class="json-diff-res">
+              <div class="json-col-head"><span>比对结果</span><span class="json-diff-sum" id="jdSum"></span></div>
+              <div class="jd-scroll" id="jdResult"><div class="json-empty">点击上方「比对」查看差异</div></div>
+            </div>
           </div>
-          <div class="json-actions"><button class="btn btn-accent btn-sm" onclick="jdCompare()">比对</button></div>
           <div class="json-msg" id="jdMsg"></div>
-          <div id="jdResult" style="margin-top:14px"></div>
         </div>
       </section>
 

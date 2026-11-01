@@ -1,13 +1,26 @@
 /* ============================================================
    Tools-X · JSON 工具（格式化 / 压缩 / 转义 / 比对）
 ============================================================ */
-let jTab='format', jfRaw='';
+let jTab='format', jfRaw='', jdMode='json';
 const JTABS=[['format','快速格式化'],['diff','比对']];
 function renderJson(){
   document.getElementById('jsonTabs').innerHTML=JTABS.map(([k,t])=>`<span class="chip ${jTab===k?'on':''}" data-jtab="${k}">${t}</span>`).join('');
   document.querySelectorAll('[data-jtab]').forEach(c=>c.onclick=()=>{jTab=c.dataset.jtab;renderJson()});
   document.getElementById('jsonFormat').classList.toggle('hide',jTab!=='format');
   document.getElementById('jsonDiff').classList.toggle('hide',jTab!=='diff');
+  document.getElementById('jsonActsFormat').classList.toggle('hide',jTab!=='format');
+  document.getElementById('jsonActsDiff').classList.toggle('hide',jTab!=='diff');
+  document.querySelectorAll('#jdModeSeg [data-jdm]').forEach(b=>b.classList.toggle('on',b.dataset.jdm===jdMode));
+  const a=document.getElementById('jdA'),b=document.getElementById('jdB');
+  if(a)a.placeholder=jdMode==='json'?'{"a":1,"b":[1,2]}':'粘贴第一段文本…';
+  if(b)b.placeholder=jdMode==='json'?'{"a":2,"c":3}':'粘贴第二段文本…';
+}
+function setJdMode(m){
+  if(jdMode===m)return;
+  jdMode=m;renderJson();
+  const a=document.getElementById('jdA').value,b=document.getElementById('jdB').value;
+  if(a.trim()&&b.trim())jdCompare();
+  else{document.getElementById('jdResult').innerHTML='<div class="json-empty">点击上方「比对」查看差异</div>';document.getElementById('jdSum').textContent='';document.getElementById('jdMsg').textContent=''}
 }
 /* JSON 语法高亮：键 k / 字符串 s / 数字 n / 布尔与 null b */
 function jfmt(space){
@@ -103,18 +116,76 @@ function diffWalk(a,b,p,out){
   }else if(a!==b)out.push({p,t:'chg',a,b});
 }
 function jdCompare(){
-  const msg=document.getElementById('jdMsg'),box=document.getElementById('jdResult');
+  const msg=document.getElementById('jdMsg'),box=document.getElementById('jdResult'),sum=document.getElementById('jdSum');
+  const va=document.getElementById('jdA').value,vb=document.getElementById('jdB').value;
+  if(!va.trim()||!vb.trim()){
+    msg.textContent='✗ 请先在 A / B 两个输入框填写内容';msg.className='json-msg err';
+    box.innerHTML='';sum.textContent='';return;
+  }
+  if(jdMode==='text')jdTextCompare(va,vb);else jdJsonCompare(va,vb);
+}
+/* JSON 结构比对：按路径逐项比较 */
+function jdJsonCompare(va,vb){
+  const msg=document.getElementById('jdMsg'),box=document.getElementById('jdResult'),sum=document.getElementById('jdSum');
   let a,b;
-  try{a=JSON.parse(document.getElementById('jdA').value)}catch(e){msg.textContent='✗ JSON A 不合法：'+e.message;msg.className='json-msg err';box.innerHTML='';return}
-  try{b=JSON.parse(document.getElementById('jdB').value)}catch(e){msg.textContent='✗ JSON B 不合法：'+e.message;msg.className='json-msg err';box.innerHTML='';return}
-  msg.textContent='';
+  try{a=JSON.parse(va)}catch(e){msg.textContent='✗ JSON A 不合法：'+e.message;msg.className='json-msg err';box.innerHTML='';sum.textContent='';return}
+  try{b=JSON.parse(vb)}catch(e){msg.textContent='✗ JSON B 不合法：'+e.message;msg.className='json-msg err';box.innerHTML='';sum.textContent='';return}
+  msg.textContent='';msg.className='json-msg';
   const out=[];diffWalk(a,b,'$',out);
-  if(!out.length){box.innerHTML='<div class="json-msg ok">✓ 两个 JSON 完全一致</div>';return}
+  if(!out.length){sum.textContent='无差异';box.innerHTML='<div class="json-msg ok" style="margin:6px 0">✓ 两个 JSON 完全一致</div>';return}
+  sum.textContent='共 '+out.length+' 处差异';
   const short=v=>{const s=JSON.stringify(v)??'undefined';return s.length>60?s.slice(0,60)+'…':s};
-  box.innerHTML='<div class="json-msg" style="margin-bottom:10px">共 '+out.length+' 处差异：</div>'+out.map(r=>{
+  box.innerHTML=out.map(r=>{
     const cls=r.t==='add'?'diff-add':r.t==='del'?'diff-del':'diff-chg';
     const badge=r.t==='add'?'只在 B':r.t==='del'?'只在 A':'值不同';
     const val=r.t==='add'?esc(short(r.a)):r.t==='del'?esc(short(r.a)):esc(short(r.a))+' <span style="opacity:.5">→</span> '+esc(short(r.b));
     return '<div class="diff-row '+cls+'"><span class="diff-badge">'+badge+'</span><span class="diff-path">'+esc(r.p)+'</span><span class="diff-val">'+val+'</span></div>';
   }).join('');
+}
+/* 纯文本逐行比对：基于 LCS 求增删行 */
+function jdTextDiff(A,B){
+  const n=A.length,m=B.length,dp=[];
+  for(let i=0;i<=n;i++)dp.push(new Uint32Array(m+1));
+  for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)
+    dp[i][j]=A[i]===B[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const rows=[];let i=0,j=0;
+  while(i<n&&j<m){
+    if(A[i]===B[j]){rows.push({k:'same',a:i+1,b:j+1,t:A[i]});i++;j++}
+    else if(dp[i+1][j]>=dp[i][j+1]){rows.push({k:'del',a:i+1,b:'',t:A[i]});i++}
+    else{rows.push({k:'add',a:'',b:j+1,t:B[j]});j++}
+  }
+  while(i<n){rows.push({k:'del',a:i+1,b:'',t:A[i]});i++}
+  while(j<m){rows.push({k:'add',a:'',b:j+1,t:B[j]});j++}
+  return rows;
+}
+function jdTextRow(r){
+  const cls=r.k==='add'?'add':r.k==='del'?'del':'';
+  const sign=r.k==='add'?'+':r.k==='del'?'−':' ';
+  return '<div class="td-row '+cls+'"><span class="td-no">'+(r.a||'')+'</span><span class="td-no">'+(r.b||'')+'</span><span class="td-sign">'+sign+'</span><span class="td-txt">'+esc(r.t)+'</span></div>';
+}
+function jdTextCompare(va,vb){
+  const msg=document.getElementById('jdMsg'),box=document.getElementById('jdResult'),sum=document.getElementById('jdSum');
+  const A=va.replace(/\r\n?/g,'\n').split('\n'),B=vb.replace(/\r\n?/g,'\n').split('\n');
+  if(A.length*B.length>4e6){
+    msg.textContent='✗ 文本过长（约 2000 行 × 2000 行以上），请分段比对';msg.className='json-msg err';
+    box.innerHTML='';sum.textContent='';return;
+  }
+  const rows=jdTextDiff(A,B);
+  const adds=rows.filter(r=>r.k==='add').length,dels=rows.filter(r=>r.k==='del').length;
+  msg.textContent='';msg.className='json-msg';
+  sum.textContent=adds||dels?('+'+adds+' / −'+dels):'无差异';
+  if(!adds&&!dels){box.innerHTML='<div class="json-msg ok" style="margin:6px 0">✓ 两段文本完全一致</div>';return}
+  const html=[];let i=0;
+  while(i<rows.length){
+    if(rows[i].k==='same'){
+      let j=i;while(j<rows.length&&rows[j].k==='same')j++;
+      if(j-i>8){
+        for(let k=i;k<i+2;k++)html.push(jdTextRow(rows[k]));
+        html.push('<div class="td-row skip">… 省略 '+(j-i-4)+' 行未变化 …</div>');
+        for(let k=j-2;k<j;k++)html.push(jdTextRow(rows[k]));
+      }else for(let k=i;k<j;k++)html.push(jdTextRow(rows[k]));
+      i=j;
+    }else{html.push(jdTextRow(rows[i]));i++}
+  }
+  box.innerHTML=html.join('');
 }

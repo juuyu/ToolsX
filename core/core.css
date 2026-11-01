@@ -59,6 +59,8 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;op
 
 /* 页面容器 / 页头 */
 .content{padding:26px 36px 64px;max-width:1240px;width:100%;margin:0 auto}
+.content.wide{max-width:none;padding-left:20px;padding-right:20px;padding-bottom:16px}
+.topbar.wide{max-width:none}
 .view{display:none;animation:fadeUp .4s cubic-bezier(.22,.8,.32,1)}
 .view.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}

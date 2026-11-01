@@ -2,14 +2,40 @@
    Tools-X · JSON 样式（JSON 工具 / JSON 文档编辑器 / 折叠树）
    通用组件见 core.css，Markdown 见 markdown.css
 ============================================================ */
-/* json 工具 */
-.json-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.json-two textarea{min-height:300px!important}
-.json-msg{font-size:12.5px;margin:12px 0 0;min-height:18px}
+/* json 工具：全宽铺满 + 视口固定高度，面板内部滚动 */
+.view.active#view-json{display:flex;flex-direction:column;height:calc(100vh - 100px);min-height:480px}
+.json-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.json-head-l{display:flex;align-items:center;gap:16px}
+.json-head-l h2{font-size:20px}
+.json-head .toolbar{margin:0}
+.json-seg{margin-left:0}
+.json-panel{flex:1;min-height:0;display:flex;flex-direction:column;animation:fadeUp .4s cubic-bezier(.22,.8,.32,1)}
+.json-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0}
+.json-col{display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel);overflow:hidden}
+.json-col-head{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;border-bottom:1px solid var(--line);background:var(--paper-deep);flex-shrink:0}
+.json-col-head>span{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase;white-space:nowrap}
+.json-col textarea{flex:1;min-height:0;width:100%;padding:16px 18px;border:none;outline:none;resize:none;background:transparent;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--ink)}
+.json-col textarea:focus{background:var(--accent-wash)}
+.json-msg{font-size:12.5px;margin:10px 0 0;min-height:18px;flex-shrink:0}
 .json-msg.err{color:#B3402A}
 .json-msg.ok{color:var(--green);font-weight:600}
-.json-panel{animation:fadeUp .4s cubic-bezier(.22,.8,.32,1)}
-.json-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+/* json 比对：上输入 / 下结果 */
+.json-diff{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px}
+.jd-inputs{flex:0 0 44%;min-height:180px}
+.json-diff-res{flex:1;min-height:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-md);background:var(--panel);overflow:hidden}
+.json-diff-sum{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.jd-scroll{flex:1;min-height:0;overflow:auto;padding:8px 12px}
+.json-empty{display:grid;place-items:center;height:100%;min-height:90px;color:var(--ink-3);font-size:12.5px}
+/* 纯文本逐行比对 */
+.td-row{display:flex;align-items:baseline;gap:10px;padding:4px 10px;border-radius:6px;font-family:var(--mono);font-size:12px;line-height:1.6}
+.td-row.add{background:var(--green-soft)}
+.td-row.del{background:#F9E9E4}
+.td-row.skip{justify-content:center;color:var(--ink-3);font-size:11px}
+.td-no{width:48px;flex-shrink:0;color:var(--ink-3);font-size:10.5px;text-align:right}
+.td-sign{width:14px;flex-shrink:0;font-weight:700}
+.td-txt{flex:1;min-width:0;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.td-row.del .td-txt{color:#B3402A}
+.td-row.add .td-txt{color:var(--green)}
 .jtree{flex:1;overflow:auto;padding:18px 20px;font-size:13px;background:var(--paper)}
 .jn-row{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px}
 .jn-row:hover{background:var(--paper-deep)}
@@ -40,6 +66,7 @@
 .diff-val{font-family:var(--mono);color:var(--ink-2);word-break:break-all}
 /* json 源码高亮覆盖层 & 高亮输出 */
 .jsrc-wrap{position:relative;flex:1;min-width:0}
+.jf-out{flex:1;min-height:0;max-height:none;padding:16px 18px;border-radius:0;white-space:pre-wrap;word-break:break-all}
 .jsrc-wrap pre.json-hi{position:absolute;inset:0;padding:22px 24px;font-family:var(--mono);font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-all;overflow:auto;pointer-events:none;background:transparent;scrollbar-width:none}
 .jsrc-wrap pre.json-hi::-webkit-scrollbar{display:none}
 .jsrc-wrap .json-src{position:absolute;inset:0;width:100%;height:100%;color:transparent;-webkit-text-fill-color:transparent;caret-color:var(--ink);white-space:pre-wrap;word-break:break-all}
@@ -48,7 +75,6 @@
 .json-hi .s{color:#4E7E4E}
 .json-hi .n{color:#3E6E96}
 .json-hi .b{color:#8E5E9E}
-.json-two pre.jf-out{min-height:300px;max-height:560px;border-radius:var(--r-sm);white-space:pre-wrap;word-break:break-all}
 /* JSON 工具格式化输出：折叠树 */
 .jt-h{cursor:pointer;user-select:none;border-radius:3px}
 .jt-h:hover{background:rgba(255,255,255,.07)}
@@ -59,7 +85,7 @@
 .jt-ell{display:none;color:#8F897E}
 .jt-node.closed>.jt-ell{display:inline}
 /* JSON 工具：结果搜索 */
-.jf-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.jf-bar{display:flex;align-items:center;gap:6px;margin:0}
 .jf-qwrap{position:relative;flex:1}
 .jf-qwrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--ink-3);pointer-events:none}
 .jf-qwrap input{width:100%;padding:6px 12px 6px 30px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:12.5px;outline:none;transition:all .15s}
@@ -82,5 +108,9 @@ mark.jt-hit.cur{background:#E0A883;color:#262524}
 :root[data-theme="dark"] .diff-chg{background:#3A3323}
 :root[data-theme="dark"] .diff-del .diff-badge{background:#5C3A30;color:#E8A18A}
 :root[data-theme="dark"] .diff-chg .diff-badge{background:#54492B;color:#D9BC7A}
+:root[data-theme="dark"] .jd-row-del,:root[data-theme="dark"] .td-row.del{background:#3E2A24}
+:root[data-theme="dark"] .td-row.del .td-txt{color:#E8A18A}
+:root[data-theme="dark"] .td-row.add .td-txt{color:#9CC28B}
+:root[data-theme="dark"] .json-col textarea:focus{background:rgba(201,100,66,.12)}
 
-@media (max-width:1080px){.json-two{grid-template-columns:1fr}}
+@media (max-width:1080px){.json-two{grid-template-columns:1fr}.jd-inputs{flex-basis:52%}}

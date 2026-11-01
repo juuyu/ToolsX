@@ -104,11 +104,82 @@ for f in *.json; do echo "$f"; done
 + {"enabled": true}
 ```
 
-## 六、图片
+## 六、PlantUML 图
+
+在 `puml` / `plantuml` 代码块中编写 PlantUML，预览时会离线渲染为 SVG（无需联网）。
+
+### 时序图
+
+```puml
+@startuml
+title 登录流程
+actor 用户
+participant "前端 App" as App
+participant "认证服务" as Auth
+database "用户库" as DB
+
+用户 -> App : 输入账号密码
+App -> Auth : POST /login
+activate Auth
+Auth -> DB : 查询用户
+DB --> Auth : 用户记录
+alt 校验通过
+  Auth --> App : token
+  App --> 用户 : 登录成功
+else 校验失败
+  Auth --> App : 401
+  App --> 用户 : 提示错误
+end
+deactivate Auth
+note right of App : 本地缓存 token
+@enduml
+```
+
+### 类图
+
+```puml
+@startuml
+title 笔记模型
+class Note {
+  +String id
+  +String title
+  +String content
+  +save()
+}
+class Folder {
+  +String id
+  +String name
+}
+interface Renderer {
+  +render(src)
+}
+Note --> Folder : 属于
+Folder --> Renderer : 使用
+@enduml
+```
+
+### 活动图
+
+```puml
+@startuml
+title 发布流程
+start
+:编写 Markdown;
+if (渲染成功?) then (是)
+  :生成 SVG;
+else (否)
+  :回退代码块;
+endif
+:显示预览;
+stop
+@enduml
+```
+
+## 七、图片
 
 ![Tools-X 图标](icons/icon128.png)
 
-## 七、长段落与标题层级
+## 八、长段落与标题层级
 
 这是一段较长的文字，用于检查正文的换行、行高与阅读节奏。理论上它会在卡片宽度内自然换行，不产生横向滚动，也不会撑破布局。继续补充一些内容：Markdown 预览采用与 Docs 相同的渲染引擎，因此标题、列表、表格、代码块的表现应当保持一致。
 

@@ -94,7 +94,16 @@ function hiCode(code,lang){
 /* ---------- docs: markdown 渲染 ---------- */
 function mdRender(src){
   const codes=[];
-  let s=esc(src).replace(/```(\w*)\n?([\s\S]*?)```/g,(m,lang,code)=>{codes.push('<pre><code>'+hiCode(unesc(code),lang)+'</code></pre>');return '\u0000'+(codes.length-1)+'\u0000'});
+  const fence=(m,lang,code)=>{
+    const raw=unesc(code);
+    if(/^(puml|plantuml|uml)$/i.test(lang)&&typeof renderPuml==='function'){
+      const svg=renderPuml(raw);
+      if(svg){codes.push('<div class="puml-block">'+svg+'</div>');return '\u0000'+(codes.length-1)+'\u0000'}
+    }
+    codes.push('<pre><code>'+hiCode(raw,lang)+'</code></pre>');
+    return '\u0000'+(codes.length-1)+'\u0000'
+  };
+  let s=esc(src).replace(/```(\w*)\n?([\s\S]*?)```/g,fence);
   const inline=t=>t
     .replace(/`([^`]+)`/g,'<code>$1</code>')
     .replace(/\*\*\*([^*]+)\*\*\*/g,'<strong><em>$1</em></strong>')

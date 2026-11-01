@@ -1,0 +1,37 @@
+@startuml
+title 下单流程（直接打开 .puml 预览测试）
+actor 顾客
+participant "商城前端" as Web
+participant "订单服务" as Order
+participant "支付服务" as Pay
+database "订单库" as DB
+
+顾客 -> Web : 提交订单
+Web -> Order : 创建订单
+activate Order
+Order -> DB : 写入订单
+DB --> Order : 订单号
+Order --> Web : 待支付
+deactivate Order
+
+Web -> Pay : 发起支付
+activate Pay
+Pay --> Web : 支付结果
+deactivate Pay
+
+alt 支付成功
+  Web -> Order : 更新订单状态
+  Order -> DB : status = paid
+  Web --> 顾客 : 下单成功
+else 支付失败
+  Web --> 顾客 : 提示重试
+end
+
+group 异步通知
+  Pay -> Order : 支付回调
+  note over Order, DB : 幂等校验后落库
+end
+
+== 订单完成 ==
+Order --> 顾客 : 发货通知
+@enduml

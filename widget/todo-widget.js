@@ -16,7 +16,7 @@
   let tasks = [];
   let settings = { widget: true };
   let prefs = {};
-  let tab = 'today';
+  let tab = 'focus';
   let host = null;
   let shadow = null;
   let panelOpen = false;
@@ -41,7 +41,6 @@
       remind: String(t.remind || 'none'),
       remindAt: Number(t.remindAt) || 0,
       notifiedFor: Number(t.notifiedFor) || 0,
-      myDay: !!t.myDay,
       important: !!t.important,
       done: !!t.done,
       steps: Array.isArray(t.steps) ? t.steps : [],
@@ -61,11 +60,7 @@
   }
 
   function badgeCount() {
-    return tasks.filter((t) => !t.done && inToday(t)).length;
-  }
-  function inToday(t) {
-    if (!t.due) return !!t.myDay;
-    return t.due <= today();
+    return tasks.filter((t) => !t.done && t.important).length;
   }
   function dueLabel(t) {
     if (!t.due) return '';
@@ -89,7 +84,7 @@
   }
   function visibleTasks() {
     let list = tasks.filter((t) => !t.done);
-    if (tab === 'today') list = list.filter(inToday);
+    if (tab === 'focus') list = list.filter((t) => t.important);
     return list.sort(sortTasks);
   }
   function dateText() {
@@ -187,7 +182,7 @@ input{font:inherit}
           </div>
         </div>
         <div class="txw-tabs">
-          <button type="button" data-tab="today" class="on">今天</button>
+          <button type="button" data-tab="focus" class="on">Focus</button>
           <button type="button" data-tab="all">全部</button>
           <span class="txw-count" id="txwCount"></span>
         </div>
@@ -208,7 +203,7 @@ input{font:inherit}
     shadow.getElementById('txwHide').addEventListener('click', hideWidget);
     shadow.querySelectorAll('.txw-tabs button').forEach((b) => {
       b.addEventListener('click', () => {
-        tab = b.dataset.tab === 'all' ? 'all' : 'today';
+        tab = b.dataset.tab === 'all' ? 'all' : 'focus';
         shadow.querySelectorAll('.txw-tabs button').forEach((x) => x.classList.toggle('on', x === b));
         render();
       });
@@ -379,7 +374,8 @@ input{font:inherit}
     const box = shadow.getElementById('txwList');
     if (!box) return;
     if (!list.length) {
-      box.innerHTML = `<div class="txw-empty">${tab === 'today' ? '今天没有待办<br>享受空白的一天' : '没有未完成的任务'}</div>`;
+      const empty = tab === 'focus' ? '还没有加入 Focus 的任务' : '没有未完成的任务';
+      box.innerHTML = `<div class="txw-empty">${empty}</div>`;
       return;
     }
     box.innerHTML = list.map((t) => {
@@ -407,7 +403,8 @@ input{font:inherit}
     e.target.value = '';
     tasks.unshift(norm({
       id: uid(), title: v, createdAt: Date.now(),
-      myDay: tab === 'today', remind: 'none'
+      important: tab === 'focus',
+      remind: 'none'
     }));
     saveTasks();
     render();
@@ -430,7 +427,7 @@ input{font:inherit}
   }
   function hideWidget() {
     settings.widget = false;
-    if (hasStorage()) { try { chrome.storage.local.set({ [SETTINGS_KEY]: { widget: false } }); } catch (e) {} }
+    saveSettings();
     applyVisible();
   }
   function openFull() {

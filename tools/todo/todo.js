@@ -16,7 +16,6 @@ const ICO_TODO_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const ICO_TODO_BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>';
 const ICO_TODO_NOTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>';
 const ICO_TODO_STEP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>';
-const ICO_TODO_SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const ICO_TODO_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 15 9 21 10 17 15 18 21 12 18 6 21 7 15 3 10 9 9"/></svg>';
 const ICO_TODO_STAR_ON = '<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 3 15 9 21 10 17 15 18 21 12 18 6 21 7 15 3 10 9 9"/></svg>';
 const ICO_TODO_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -24,15 +23,14 @@ const ICO_TODO_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const ICO_TODO_DONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>';
 
 const TODO_LISTS = [
-  { key: 'myday', label: '我的一天', icon: ICO_TODO_SUN },
+  { key: 'important', label: 'Focus', icon: ICO_TODO_STAR },
   { key: 'planned', label: '计划', icon: ICO_TODO_CAL },
-  { key: 'important', label: '重要', icon: ICO_TODO_STAR },
   { key: 'all', label: '全部', icon: ICO_TODO_LIST },
   { key: 'completed', label: '已完成', icon: ICO_TODO_DONE }
 ];
 const TODO_GROUPS = { overdue: '已逾期', today: '今天', tomorrow: '明天', later: '更晚', nodate: '无日期' };
 
-let todoTasks = [], todoFilter = 'myday', todoSel = null;
+let todoTasks = [], todoFilter = 'important', todoSel = null;
 let todoSaveT = 0, todoSessT = 0, todoSettings = { widget: true };
 
 /* ---------- 数据归一化 ---------- */
@@ -49,7 +47,6 @@ function todoNorm(t) {
     remind: remind,
     remindAt: 0,
     notifiedFor: Number(t.notifiedFor) || 0,
-    myDay: !!t.myDay,
     important: !!t.important,
     done: !!t.done,
     steps: (Array.isArray(t.steps) ? t.steps : []).map((s) => ({
@@ -128,6 +125,7 @@ function todoGroupKey(t) {
 }
 function todoSortFn(a, b) {
   if (a.done !== b.done) return a.done ? 1 : -1;
+  if (a.done && b.done) return (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt);
   if (a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
   if (a.due && !b.due) return -1;
   if (!a.due && b.due) return 1;
@@ -140,7 +138,7 @@ function todoInit(stored) {
   const s = stored && typeof stored === 'object' ? stored : {};
   todoTasks = (Array.isArray(s.tasks) ? s.tasks : []).map(todoNorm).filter(Boolean);
   const sess = s.session && typeof s.session === 'object' ? s.session : {};
-  todoFilter = TODO_LISTS.some((l) => l.key === sess.filter) ? sess.filter : 'myday';
+  todoFilter = TODO_LISTS.some((l) => l.key === sess.filter) ? sess.filter : 'important';
   todoSel = sess.sel ? String(sess.sel) : null;
   if (todoSel && !todoTasks.some((t) => t.id === todoSel)) todoSel = null;
   todoSettings = Object.assign({ widget: true }, s.settings && typeof s.settings === 'object' ? s.settings : {});
@@ -184,11 +182,10 @@ function flushTodo() {
 
 /* ---------- 列表筛选 / 渲染 ---------- */
 function todoCounts() {
-  const c = { myday: 0, planned: 0, important: 0, all: 0, completed: 0 };
+  const c = { planned: 0, important: 0, all: 0, completed: 0 };
   todoTasks.forEach((t) => {
     if (t.done) { c.completed++; return; }
     c.all++;
-    if (t.myDay) c.myday++;
     if (t.due) c.planned++;
     if (t.important) c.important++;
   });
@@ -202,8 +199,7 @@ function todoMatch(t, q) {
 function todoFiltered() {
   if (query) return todoTasks.filter((t) => todoMatch(t, query)).sort(todoSortFn);
   let list = todoTasks.filter((t) => (todoFilter === 'completed' ? t.done : !t.done));
-  if (todoFilter === 'myday') list = list.filter((t) => t.myDay);
-  else if (todoFilter === 'planned') list = list.filter((t) => t.due);
+  if (todoFilter === 'planned') list = list.filter((t) => t.due);
   else if (todoFilter === 'important') list = list.filter((t) => t.important);
   return list.sort(todoSortFn);
 }
@@ -214,9 +210,8 @@ function todoListLabel() {
 }
 function todoEmptyText() {
   if (query) return '没有匹配的任务';
-  if (todoFilter === 'myday') return '我的一天还是空的 —— 添加任务，或把任务标记为「我的一天」';
   if (todoFilter === 'planned') return '还没有安排日期的任务';
-  if (todoFilter === 'important') return '还没有标记为重要的任务';
+  if (todoFilter === 'important') return '还没有加入 Focus 的任务';
   if (todoFilter === 'completed') return '还没有已完成的任务';
   return '所有任务都完成了';
 }
@@ -246,7 +241,6 @@ function todoRowHtml(t) {
       const done = t.steps.filter((s) => s.done).length;
       meta.push(`<span class="todo-mini" title="步骤 ${done}/${t.steps.length}">${ICO_TODO_STEP}<b>${done}/${t.steps.length}</b></span>`);
     }
-    if (t.myDay && !query && todoFilter !== 'myday') meta.push(`<span class="todo-mini" title="我的一天">${ICO_TODO_SUN}</span>`);
   }
   return `<div class="todo-row ${t.done ? 'done' : ''} ${todoSel === t.id ? 'sel' : ''}" data-tid="${esc(t.id)}" onclick="todoSelect('${t.id}')">
     <button type="button" class="todo-check" title="${t.done ? '取消完成' : '完成'}" onclick="event.stopPropagation();todoToggle('${t.id}')">${ICO_TODO_CHECK}</button>
@@ -301,8 +295,7 @@ function renderTodoDetail() {
     <div class="todo-detail-body">
       <input id="todoDTitle" class="todo-d-title" value="${esc(t.title)}" placeholder="任务名称" spellcheck="false" oninput="todoTitleInput(this.value)" onblur="todoTitleBlur()">
       <div class="todo-flags">
-        <button type="button" class="todo-flag ${t.myDay ? 'on' : ''}" onclick="todoToggleMyDay()">${ICO_TODO_SUN}<span>我的一天</span></button>
-        <button type="button" class="todo-flag ${t.important ? 'on' : ''}" onclick="todoToggleImportant()">${ICO_TODO_STAR}<span>重要</span></button>
+        <button type="button" class="todo-flag ${t.important ? 'on' : ''}" onclick="todoToggleImportant()">${ICO_TODO_STAR}<span>Focus</span></button>
       </div>
       <div class="todo-block">
         <label class="todo-label">步骤</label>
@@ -383,7 +376,7 @@ function todoCloseDetail() { todoSel = null; todoSaveSession(); renderTodo(); }
 function todoCreate(title) {
   const t = todoNorm({
     id: uid(), title: title, createdAt: Date.now(),
-    myDay: todoFilter === 'myday', important: todoFilter === 'important', remind: 'none'
+    important: todoFilter === 'important', remind: 'none'
   });
   if (!t) return;
   todoTasks.unshift(t);
@@ -415,12 +408,6 @@ function todoStar(id) {
   t.important = !t.important;
   todoSave();
   renderTodo();
-}
-function todoToggleMyDay() {
-  const t = todoCur();
-  if (!t) return;
-  t.myDay = !t.myDay;
-  todoSave(); renderTodo();
 }
 function todoToggleImportant() {
   const t = todoCur();

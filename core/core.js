@@ -19,7 +19,11 @@ const STORE = {
   todoIndex: 'toolsx.todo.tasks',              // Todo：任务列表
   todoSession: 'toolsx.todo.session',          // Todo：当前列表筛选 / 选中任务
   todoSettings: 'toolsx.todo.settings',        // Todo：网页悬浮按钮等开关
-  todoNotified: 'toolsx.todo.notified'         // Todo：后台已提醒记录（background.js 写入）
+  todoNotified: 'toolsx.todo.notified',        // Todo：后台已提醒记录（background.js 写入）
+  promptItems: 'toolsx.prompt.items',          // Prompt：全部 Prompt 定义
+  promptCats: 'toolsx.prompt.categories',      // Prompt：分类
+  promptStats: 'toolsx.prompt.stats',          // Prompt：使用次数 / 最近使用时间
+  promptSession: 'toolsx.prompt.session'       // Prompt：当前选中列表
 };
 const DOC_NOTE_PREFIX = STORE.docNote('');
 const API_EXAMPLE_PREFIX = STORE.apiExamples('');

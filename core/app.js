@@ -3,12 +3,13 @@
    视图切换、全局搜索与启动（最后加载，boot 在末尾执行）
 ============================================================ */
 let view = 'todo', query = '';
-const VIEWS = ['todo', 'docs', 'json', 'api'];
+const VIEWS = ['todo', 'docs', 'json', 'api', 'prompt'];
 const SEARCH_PH = {
   todo: '搜索待办标题、备注或步骤…  / 聚焦',
   docs: '搜索笔记名称或内容…  / 聚焦',
   json: '搜索笔记名称或内容…  / 聚焦',
-  api: 'Search request name or URL…  / to focus'
+  api: 'Search request name or URL…  / to focus',
+  prompt: '搜索 Prompt 名称、正文或参数…  / 聚焦'
 };
 function hashView() {
   const m = location.hash.match(/^#\/([a-z]+)/);
@@ -29,7 +30,7 @@ function switchView(v, silent) {
   const el = document.getElementById('view-' + v);
   if (el) el.classList.add('active');
   const addBtn = document.getElementById('addBtn'), addLabel = document.getElementById('addLabel');
-  const labels = { todo: null, docs: '新建笔记', json: null, api: null };
+  const labels = { todo: null, docs: '新建笔记', json: null, api: null, prompt: null };
   addBtn.style.display = labels[v] ? 'inline-flex' : 'none';
   addLabel.textContent = labels[v] || '';
   if (!silent && hashView() !== v) { try { history.pushState({ v }, '', '#/' + v); } catch (e) {} }
@@ -49,6 +50,7 @@ function render() {
   else if (view === 'docs') renderDocs();
   else if (view === 'json') renderJson();
   else if (view === 'api') renderApi();
+  else if (view === 'prompt') renderPrompt();
 }
 document.getElementById('search').addEventListener('input', (e) => { query = e.target.value.toLowerCase(); render(); });
 document.getElementById('addBtn').addEventListener('click', () => { if (view === 'docs') newNote(null); });
@@ -84,6 +86,12 @@ async function boot() {
     examples: keysByPrefix(API_EXAMPLE_PREFIX),
     session: get(STORE.apiSession),
     draft: get(STORE.apiDraft)
+  });
+  promptInit({
+    items: get(STORE.promptItems),
+    cats: get(STORE.promptCats),
+    stats: get(STORE.promptStats),
+    session: get(STORE.promptSession)
   });
   const p = get(STORE.prefs);
   if (p && typeof p === 'object') Object.assign(prefs, p);

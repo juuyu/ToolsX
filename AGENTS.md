@@ -51,7 +51,7 @@ widget/todo-widget.js          content script：所有 http/https 网页的悬�
 
 ```
 manifest.json        MV3 配置；改动 content_scripts / sandbox / host_permissions / background 时注意顺序
-app.html             主界面骨架 + 视图容器（#view-todo / #view-docs / #view-json / #view-api）+ 弹窗、toast 节点
+app.html             主界面骨架 + 视图容器（#view-todo / #view-docs / #view-json / #view-api / #view-prompt）+ 弹窗、toast 节点
 core/theme.css       仅设计变量（:root 浅色 / :root[data-theme="dark"]），无视觉规则 → 可全局注入
 core/core.css        通用组件：reset、body、滚动条、topbar/search、btn/icon-btn、page-head/toolbar/chip、
                      field、seg、csel*（自定义下拉）、modal/overlay/toast、docs-tools/mini、tree*、hide
@@ -66,6 +66,7 @@ tools/todo/todo.{css,js}      Todo：智能列表、任务行、任务详情、�
 tools/docs/docs.{css,js}      Docs：目录树、编辑器、块级编辑、TOC；docsInit()
 tools/json/json.{css,js}      JSON 工具；renderJson()
 tools/postman/postman.{css,js} Postman；apiInit()/renderApi()
+tools/prompt/prompt.{css,js}  Prompt：分类侧栏、卡片列表、{{参数}} 模板与使用弹窗、收藏/常用、使用统计、右上角手柄拖动排序、导入导出勾选弹窗；promptInit()/renderPrompt()
 widget/todo-widget.js        所有网页的 Todo 悬浮面板（content script，Shadow DOM；直接读写 chrome.storage.local）
 background.js                MV3 service worker：Todo 提醒排期（chrome.alarms）、系统通知（chrome.notifications）、打开 Todo 页
 preview/shell.css    预览页视觉（必须限定在 html[data-toolsx-preview] / body.tx-body）
@@ -82,7 +83,7 @@ tests/               示例文件（test.md / test.json / test.jsonc），被 .g
 
 ```html
 core/theme.css → core/core.css → core/markdown.css
-→ tools/todo/todo.css → tools/docs/docs.css → tools/json/json.css → tools/postman/postman.css
+→ tools/todo/todo.css → tools/docs/docs.css → tools/json/json.css → tools/postman/postman.css → tools/prompt/prompt.css
 ```
 
 样式表顺序即优先级；工具样式必须在 core 之后，才能覆盖通用规则。
@@ -91,7 +92,7 @@ core/theme.css → core/core.css → core/markdown.css
 
 ```html
 core/md-core.js → core/core.js → core/ui.js → core/json-view.js
-→ tools/todo/todo.js → tools/docs/docs.js → tools/json/json.js → tools/postman/postman.js
+→ tools/todo/todo.js → tools/docs/docs.js → tools/json/json.js → tools/postman/postman.js → tools/prompt/prompt.js
 → core/app.js
 ```
 
@@ -127,6 +128,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 | Markdown 渲染 / 大纲 / TOC | `mdRender` / `mdOutline` / `tocHtml` / `hiCode` / `esc` | core/md-core.js |
 | JSON 高亮 / 折叠树 | `jsonHi` / `jTree` / `jToggle` | core/json-view.js |
 | 预览页外壳 | `window.TXShell.*`（`pageBar` 生成工具栏 HTML） | preview/shell.js |
+| Prompt 参数模板 | `{{参数名}}` 语法；`prParseKeys` 解析 / `prMergeParams` 合并已配置项 / `prFill` 生成最终文本 | tools/prompt/prompt.js |
 
 原则：能在 `core/` 复用的，不在工具目录里再写一份；确实只有单一工具使用的逻辑才留下（如 Docs 的块级编辑、Postman 的请求构建）。若同一逻辑被第二个工具需要，就上提到 `core/`，并在第 2 节表格中登记。
 
@@ -152,6 +154,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - 读取时做兼容归一化（`Array.isArray(x)` 旧格式兼容、缺字段补默认），不要假设存储里是新结构。
 - 旧版单 key 数据（`toolsxData` / `aihubData`）的迁移在 `migrateLegacy()`；新增 key 时同步补充迁移逻辑。
 - 非扩展环境（直接打开 `app.html`）会自动退回 `localStorage`，逻辑必须两条路径都能跑。
+- Prompt：`promptItems`（全部 Prompt 定义，含正文与参数配置）、`promptCats`（分类）、`promptStats`（id → `{n: 使用次数, t: 最近使用时间}`）、`promptSession`（当前选中的列表，`'all' / 'recent' / 'fav' / 分类 id / ''`）。首次运行（无 `promptCats`）只播种 5 个默认分类，**不内置任何 Prompt**；老数据的 `promptSession.seedV` 仅作为「曾经播种过内置示例」的标记，启动时会按名称一次性清理内置示例并移除该标记（改过名的不动）。
 - Todo：`todoIndex`（任务列表）、`todoSession`（筛选 / 选中）、`todoSettings`（悬浮按钮开关 `widget` + 悬浮球位置 `widgetPos: {left, top}`）由前端写；`todoNotified`（id → 已提醒的 remindAt）**只由 `background.js` 写**，前端不得改动，避免与任务列表编辑互相覆盖。
 
 ## 7. 新增一个工具的步骤
@@ -173,6 +176,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - Docs：正文按 key 懒加载（`docCache` + `loadDoc`），切换/离开前必须 `flushDocSaves()`；预览块编辑依赖 `splitBlocks` 的块边界，改 Markdown 渲染时不要破坏 `.blk` 结构。
 - JSON：格式化/压缩/转义/还原/比对全部在前端完成；折叠树靠 `.jt-node.closed` 切换 `.jt-kids` 与 `.jt-ell`，收起数组时右侧要显示灰色元素数量。
 - Postman：详情修改 400ms 防抖自动保存（`apiAutoSave`/`apiPersistCurrent`），地址被清空时不得覆盖已保存内容；改请求结构时同步 `apiSnapshot`、导入导出格式（`url/method/headers/body`）与 `apiNorm*` 归一化。
+- Prompt：正文中的参数只认 `{{参数名}}`（`PR_VAR_SRC`）；`prItemNorm` 始终用 `prMergeParams` 用正文里的参数键为准重算列表，已配置的 `label/def/multi/req` 保留、丢失的键直接移除。点击卡片即走 `prUseRecord`（`n+1`、更新 `t`），“常用/收藏”按 `n` 降序、`t` 降序排序，其余视图按 `prState.items` 数组顺序展示。手动排序由卡片右上角手柄拖动实现（`.pr-drag` + `prGridPointerDown` / `prDragMove` / `prCommitOrder`，仅「全部 / 分类 / 未分类」渲染手柄，搜索与「常用 / 收藏」不渲染手柄因此不可拖动；拖动到列表上下边缘会自动滚动）：起拖时卡片改为 `position:fixed` 跟随指针（`.pr-card.dragging`），原位插入 `.pr-slot` 虚线占位块，落点只移动占位块，松手后按占位块位置回填顺序再重渲染；拖动只交换当前视图内条目的槽位，不改动其他视图顺序；拖动结束后的 click 会被 `prGridClickCapture` 拦截，避免误触复制。导入兼容 `prompts / items / 数组 / 单对象` 与 `content|prompt`、`category|categoryName|cat`；同名分类合并、同名 Prompt 加 `(2)` 序号。导出格式 `{type:'toolsx.prompt', version:1, categories, prompts}`，分类按名称写入以便跨实例迁移。
 - Todo：任务保存 300ms 防抖（`todoSave`）、会话 150ms（`todoSaveSession`），离开视图与页面隐藏都会 `flushTodo()`；`todoNorm` 里补默认字段并重算 `remindAt`，改字段时务必同步 `todoNorm`、`background.js` 的 `remindAtOf` 与 `widget/todo-widget.js` 的 `norm`。提醒时间口径：未设置时间按 09:00，提前量单位为分钟，`'none'` 表示不提醒。悬浮面板默认在右上角，拖动结束后把坐标写入 `widgetPos`；工具页改 `widget` 开关时必须保留其他 settings 字段（`Object.assign({}, todoSettings, { widget })`），否则悬浮球位置会丢失。
 - 预览页：所有视觉规则必须限定在 `html[data-toolsx-preview]` 或 `body.tx-body` 之下，**绝不允许写无前缀的全局标签选择器**（会污染用户的普通 `file://` 页面）。`core/theme.css` 只定义变量，因此允许直接注入。
 - 文案语言：Docs / JSON 工具与预览页为中文；Postman 页面（含按钮、空状态、搜索提示）全部英文。
@@ -199,6 +203,7 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - Docs：目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在。
 - JSON：格式化/压缩/转义/还原/比对、结果折叠与搜索、深色模式。
 - Postman：`.csel` 下拉开合与方法配色、新建文件夹/请求弹窗、Params/Headers/Body 编辑与自动保存、导出下载、响应保存为示例。
+- Prompt：首次进入应只有 5 个默认分类、没有内置 Prompt；新建分类 / 重命名 / 删除（删除后其中 Prompt 变未分类）；新建 Prompt 后正文里的 `{{参数}}` 自动出现在参数配置区；点击带参数的卡片应弹出输入框并实时预览最终 Prompt（必填为空时阻止复制），无参数卡片直接复制；**点击任意卡片后卡片次数与侧栏「常用」应立刻 +1**；拖动排序改为卡片右上角的手柄按钮：按住手柄后卡片跟随指针移动、原位出现虚线占位块指明落点（松手后刷新顺序仍在），点手柄本身不会计入使用次数；「常用 / 收藏」与搜索状态下不显示手柄、无法拖动；拖动到列表上下边缘会自动滚动；数据较多时只有右侧卡片区滚动，页面标题与左侧分类栏保持不动；收藏与常用视图、搜索、导入/导出勾选弹窗（默认全选、全选/半选）、深色模式与 860px 单列布局；老数据升级后内置示例应被清理且用户自建 Prompt 保留。
 - 预览页：分别打开 `tests/test.md`、`tests/test.json`、`tests/test.jsonc`，检查工具栏、主题切换、TOC 跳转、JSON 折叠与 JSONC 注释解析（需开启「允许访问文件网址」）。
 - 控制台必须无报错；改动 CSS 后换端口或新的隔离上下文，避免缓存误判。
 
@@ -240,3 +245,4 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - `background.js` 只写 `toolsx.todo.notified`，不要让它回写 `toolsx.todo.tasks`，否则会覆盖用户正在编辑的任务；`app-window.js` 用 `lastWrites` 值比对抑制自身写入回声，新增同步逻辑时保持这一机制。
 - MV3 service worker 会被回收，所有定时提醒都必须走 `chrome.alarms`（不要在后台用 `setInterval`）；每次任务变化后都要重新 `chrome.alarms.clear` + `create` 排期。
 - `widget/todo-widget.js` 是 content script：改完必须**刷新扩展并新开标签页**才生效；它直接写 storage，绕过 sandbox，因此工具页依赖 `TOOLSX_STORE_SYNC` 才能看到变化。
+- 媒体查询里把多栏网格改成单列（`grid-template-columns:1fr`）时，grid item 仍会被内部横向滚动区（如横向分类导航）的 min-content 撑宽，导致整页横向溢出 → 给该 item 加 `min-width:0`（Prompt 的 `.pr-side` / `.pr-nav` 即为此）。

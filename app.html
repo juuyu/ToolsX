@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-theme="dark"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tools-X · Todo / Docs / JSON / Postman</title>
+<title>Tools-X · Todo / Docs / JSON / Postman / Prompt</title>
 <link rel="icon" href="icons/icon48.png">
 <script>(function(){var t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})();</script>
 <link rel="stylesheet" href="core/theme.css">
@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="tools/docs/docs.css">
 <link rel="stylesheet" href="tools/json/json.css">
 <link rel="stylesheet" href="tools/postman/postman.css">
+<link rel="stylesheet" href="tools/prompt/prompt.css">
 </head>
 <body>
 <div class="app">
@@ -309,6 +310,35 @@
           </div>
         </div>
       </section>
+
+      <section class="view" id="view-prompt">
+        <div class="page-head">
+          <h2>Prompt</h2>
+        </div>
+        <div class="pr-layout">
+          <aside class="pr-side">
+            <div class="docs-tools">
+              <button class="mini" onclick="promptCatNew()">新建分类</button>
+            </div>
+            <nav class="pr-nav" id="prNav"></nav>
+            <div class="pr-stats" id="prStats"></div>
+          </aside>
+          <section class="pr-main">
+            <div class="pr-toolbar">
+              <div class="pr-title">
+                <h3 id="prHeadTitle">全部</h3>
+                <span class="pr-count" id="prCount"></span>
+              </div>
+              <div class="spacer"></div>
+              <button class="btn btn-ghost btn-sm" onclick="promptImport()">导入</button>
+              <button class="btn btn-ghost btn-sm" onclick="promptExport()">导出</button>
+              <button class="btn btn-accent btn-sm" onclick="promptNew()">新建 Prompt</button>
+            </div>
+            <div class="pr-grid" id="prGrid"></div>
+          </section>
+        </div>
+        <input type="file" id="prImportFile" accept=".json,application/json" style="display:none" onchange="promptImportFileChange(event)">
+      </section>
     </div>
   </div>
 </div>
@@ -327,5 +357,6 @@
 <script src="tools/docs/docs.js"></script>
 <script src="tools/json/json.js"></script>
 <script src="tools/postman/postman.js"></script>
+<script src="tools/prompt/prompt.js"></script>
 <script src="core/app.js"></script>
 </body></html>

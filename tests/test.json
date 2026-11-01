@@ -1,0 +1,82 @@
+{
+  "project": "Tools-X",
+  "version": "1.0.0",
+  "description": "纯浏览器运行的 Docs 与 JSON 工具，数据保存在浏览器本地。",
+  "enabled": true,
+  "deprecated": false,
+  "releaseDate": null,
+  "downloads": 1024,
+  "rating": 4.85,
+  "temperature": -12.5,
+  "scientific": 6.02e23,
+  "negativeExponent": 1.5e-8,
+  "zero": 0,
+  "bigNumber": 9007199254740991,
+  "tags": [
+    "docs",
+    "json",
+    "jsonc",
+    "markdown"
+  ],
+  "emptyArray": [],
+  "emptyObject": {},
+  "nullArray": [
+    null,
+    null
+  ],
+  "mixedArray": [
+    1,
+    "two",
+    true,
+    null,
+    {
+      "k": "v"
+    },
+    [
+      1,
+      2,
+      3
+    ]
+  ],
+  "escapes": "引号 \" 反斜杠 \\ 换行 \n 制表 \t",
+  "unicode": "中文 · 日本語 · emoji 🚀",
+  "url": "https://example.com/path?a=1&b=2",
+  "a\"b": true,
+  "specialKeys": {
+    "with space": 1,
+    "with-dash": 2,
+    "with.dot": 3,
+    "中文键": 4
+  },
+  "nested": {
+    "level1": {
+      "level2": {
+        "level3": {
+          "value": "深层嵌套",
+          "flag": false
+        }
+      }
+    }
+  },
+  "arrayOfObjects": [
+    {
+      "id": 1,
+      "name": "Docs",
+      "active": true,
+      "tags": [
+        "note",
+        "markdown"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "JSON",
+      "active": false,
+      "meta": {
+        "format": "json",
+        "lines": 20
+      }
+    }
+  ],
+  "longString": "这一行刻意写得很长，用于检查预览在宽内容下的横向滚动与换行表现，同时确认高亮不会被长字符串打断。ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+}

@@ -1,6 +1,8 @@
 # 本地开发与测试目录（不纳入版本控制）
 /dev/
-/tests/
+
+# 测试时导出的数据文件（示例 test.* 仍纳入版本控制）
+/tests/toolsx-prompts-*.json
 
 # 系统 / 编辑器杂项
 .DS_Store

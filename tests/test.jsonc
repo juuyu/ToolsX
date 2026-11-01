@@ -1,0 +1,62 @@
+{
+  // 这是一个 JSONC 文件：支持行注释与块注释
+  /*
+     块注释可以跨多行
+     也允许尾随逗号
+  */
+  "project": "Tools-X",
+  "version": "1.0.0", // 行尾注释
+  "enabled": true,
+  "deprecated": false,
+  "releaseDate": null,
+  "downloads": 1024,
+  "rating": 4.85,
+  "scientific": 6.02e23,
+  "negativeExponent": -1.5e-8,
+  "emptyObject": {},
+  "emptyArray": [],
+  "url": "https://example.com/path?a=1&b=2", // 字符串里的 // 不是注释
+  "rawText": "包含 /* 注释符号 */ 的普通文本",
+  "escapes": "引号 \" 反斜杠 \\ 换行 \n",
+  "tags": [
+    "docs", // 数组内的行注释
+    "json",
+    /* 数组内的块注释 */
+    "jsonc",
+  ],
+  "nested": {
+    "level1": {
+      "level2": {
+        "value": 42,
+      },
+    },
+  },
+  "mixedArray": [
+    1,
+    "two",
+    true,
+    null,
+    {
+      "k": "v",
+    },
+    [1, 2, 3],
+  ],
+  "arrayOfObjects": [
+    {
+      "id": 1,
+      "name": "Docs",
+      "active": true, // 每个元素后都可以有注释
+    },
+    {
+      "id": 2,
+      "name": "JSON",
+      "active": false,
+    },
+  ],
+  "specialKeys": {
+    "with space": 1,
+    "with-dash": 2,
+    "中文键": 3,
+  },
+  // 末尾允许尾随逗号
+}

@@ -22,7 +22,7 @@
 
   const ICON_DOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg>';
 
-  const PAGE_HTML = S.pageBar(ICON_DOC) + `
+  const PAGE_HTML = S.pageBar(ICON_DOC, `<button type="button" class="tx-btn" data-act="pdf" title="导出 PDF" aria-label="导出 PDF">${S.ICON_PRINT}</button>`) + `
 <div class="tx-wrap">
   <div class="tx-doc">
     <div class="tx-md"></div>
@@ -86,6 +86,10 @@
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
       if (btn.dataset.act === 'copy') S.copyText(source, '已复制 Markdown 源码');
+      else if (btn.dataset.act === 'pdf') {
+        const view = document.querySelector('.tx-md');
+        if (!view || (typeof mdPrintHtml !== 'function') || !mdPrintHtml(view.innerHTML)) S.toast('当前环境不支持打印');
+      }
       else if (btn.dataset.act === 'theme') {
         theme = theme === 'dark' ? 'light' : 'dark';
         S.applyTheme(THEME_KEY, theme);

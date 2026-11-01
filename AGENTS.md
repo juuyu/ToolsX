@@ -57,21 +57,21 @@ core/core.css        通用组件：reset、body、滚动条、topbar/search、b
                      field、seg、csel*（自定义下拉）、modal/overlay/toast、docs-tools/mini、tree*、hide
 core/markdown.css    Markdown 渲染（.md 与 .tx-md 合并选择器）、代码高亮 .ck-*、.toc-item
 core/puml.js         PlantUML 离线渲染（renderPuml → SVG），支持时序图 / 类图 / 活动图常用子集
-core/md-core.js      esc/unesc/hiCode/mdRender/mdOutline/tocHtml（mdRender 识别 ```puml / ```plantuml 代码块）
+core/md-core.js      esc/unesc/hiCode/mdRender/mdOutline/tocHtml（mdRender 识别 ```puml / ```plantuml 代码块）、mdPrintHtml（导出 PDF）
 core/core.js         EMBEDDED 判定、STORE key 表、get/patch/removeKeys、onStoreSync（外部存储变更）、
                      旧数据迁移、prefs/主题、uid/toast/copy/openModal/closeModal、节点工具、ICO_* 图标、formatBytes/byteLen
 core/ui.js           cselToggle/cselClose/cselValue/cselSelect、promptText/submitPromptText、downloadText
 core/json-view.js    jsonHi/jTree/jToggle（JSON 工具、Docs JSON 文档、Postman 响应共用）
 core/app.js          视图路由、全局搜索、flushAll、boot()（最后加载）
 tools/todo/todo.{css,js}      Todo：智能列表、任务行、任务详情、步骤、日期/提醒、悬浮按钮开关；todoInit()/renderTodo()/flushTodo()
-tools/docs/docs.{css,js}      Docs：目录树、编辑器、块级编辑、TOC；docsInit()
+tools/docs/docs.{css,js}      Docs：目录树、编辑器、块级编辑、TOC、导出 PDF；docsInit()
 tools/json/json.{css,js}      JSON 工具；renderJson()/setJdMode()/jdCompare()（JSON 结构 + 纯文本逐行双模式）
 tools/postman/postman.{css,js} Postman；apiInit()/renderApi()
 tools/prompt/prompt.{css,js}  Prompt：分类侧栏、卡片列表、{{参数}} 模板与使用弹窗、收藏/常用、使用统计、右上角手柄拖动排序、导入导出勾选弹窗；promptInit()/renderPrompt()
 widget/todo-widget.js        所有网页的 Todo 悬浮面板（content script，Shadow DOM；直接读写 chrome.storage.local）
 background.js                MV3 service worker：Todo 提醒排期（chrome.alarms）、系统通知（chrome.notifications）、打开 Todo 页
 preview/shell.css    预览页视觉（必须限定在 html[data-toolsx-preview] / body.tx-body）
-preview/shell.js     window.TXShell：主题、readSource、stats、toast、copyText、setMode、pageBar
+preview/shell.js     window.TXShell：主题、readSource、stats、toast、copyText、setMode、pageBar、ICON_*
 preview/md-page.js   本地 .md 渲染页（content script）
 preview/json-page.js 本地 .json/.jsonc 渲染页（content script，含 JSONC 解析与折叠）
 preview/json-page.css JSON 预览专属样式
@@ -126,8 +126,9 @@ core/puml.js → core/md-core.js → core/core.js → core/ui.js → core/json-v
 | 自定义下拉 | `cselToggle` / `cselClose` / `cselValue` / `cselSelect` + DOM 结构 `.csel/.csel-btn/.csel-val/.csel-caret/.csel-menu/.csel-opt` | css: core/core.css，js: core/ui.js |
 | 文本文件导出 | `downloadText(filename, text, mime)` | core/ui.js |
 | ID、时间、字节数 | `uid()` / `fmtTime()` / `formatBytes()` / `byteLen()` | core/core.js |
-| 图标 | `ICO_DOC/ICO_JSON/ICO_FOLDER/ICO_PLUS/ICO_CHEV_*/ICO_EDIT/ICO_TRASH/ICO_LOCK/ICO_COPY/ICO_MSG` | core/core.js |
+| 图标 | `ICO_DOC/ICO_JSON/ICO_FOLDER/ICO_PLUS/ICO_CHEV_*/ICO_EDIT/ICO_TRASH/ICO_LOCK/ICO_COPY/ICO_PRINT/ICO_MSG` | core/core.js |
 | Markdown 渲染 / 大纲 / TOC | `mdRender` / `mdOutline` / `tocHtml` / `hiCode` / `esc` | core/md-core.js |
+| Markdown 导出 PDF | `mdPrintHtml(html)`（临时 `.print-doc` 容器 + 切浅色 + `window.print()`；打印后 `afterprint` 清理；样式在 `@media print`） | core/md-core.js / core/markdown.css |
 | PlantUML 渲染 | `renderPuml(src)` → SVG 字符串（空串表示无法识别）；样式类 `.puml-block` / `.pl-*` | js: core/puml.js，css: core/markdown.css |
 | JSON 高亮 / 折叠树 | `jsonHi` / `jTree` / `jToggle` | core/json-view.js |
 | 预览页外壳 | `window.TXShell.*`（`pageBar` 生成工具栏 HTML） | preview/shell.js |
@@ -205,11 +206,11 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - Todo：新建 / 完成 / 星标（Focus）、任务详情与步骤、日期时间与提醒下拉、清除已完成、刷新后数据仍在、深色模式；直接打开 `app.html` 时提醒退化为页面内通知。
 - Todo 悬浮面板（扩展内）：刷新扩展后**新开标签页**打开任意 https 网页，检查右上角按钮、Focus 数量、快捷添加、勾选完成、打开完整页面、隐藏按钮；拖动悬浮球后位置应跨页面保留，面板自动避让到视口内；在工具页改任务后悬浮面板应实时同步。
 - 系统通知：设置一条 1～2 分钟后的提醒，关闭工具页后仍能收到通知；点击通知应打开 Todo 页。
-- Docs：标题下无描述、全宽视口布局；预览模式下 ```puml 代码块应渲染为图形（编辑该块时显示原始围栏文本）；左侧目录默认展开为常规布局列（内含 新建笔记 / 文件夹 / 全部折叠 / 收起目录），收起后变成竖向「目录」按钮，不遮挡正文；源码模式 textarea 填满编辑区高度；预览模式页头固定、正文内部滚动；编辑器头部的列表按钮可开合右侧悬浮 TOC，滚动正文时 TOC 不动；目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在。
+- Docs：标题下无描述、全宽视口布局；预览模式下 ```puml 代码块应渲染为图形（编辑该块时显示原始围栏文本）；左侧目录默认展开为常规布局列（内含 新建笔记 / 文件夹 / 全部折叠 / 收起目录），收起后变成竖向「目录」按钮，不遮挡正文；源码模式 textarea 填满编辑区高度；预览模式页头固定、正文内部滚动；编辑器头部的列表按钮可开合右侧悬浮 TOC，滚动正文时 TOC 不动；目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在；**导出 PDF**：点编辑器头部打印按钮后，打印预览应只包含正文（无 topbar / 目录树 / TOC / 工具栏），A4 浅色、代码块浅底深字、PlantUML 图与表格不被分页切开；源码模式下导出也应是渲染后的正文。
 - JSON：版面应左右铺满、标题无描述、操作按钮与页签在顶部同一行、面板占满视口且页面无纵向滚动条；格式化/压缩/转义/还原、结果折叠与搜索；比对页分别用 JSON 结构模式（合法 JSON 按路径出差异）与纯文本模式（逐行出增删、长段相同行折叠）验证；深色模式。
 - Postman：`.csel` 下拉开合与方法配色、新建文件夹/请求弹窗、Params/Headers/Body 编辑与自动保存、导出下载、响应保存为示例。
 - Prompt：首次进入应只有 5 个默认分类、没有内置 Prompt；新建分类 / 重命名 / 删除（删除后其中 Prompt 变未分类）；新建 Prompt 后正文里的 `{{参数}}` 自动出现在参数配置区；点击带参数的卡片应弹出输入框并实时预览最终 Prompt（必填为空时阻止复制），无参数卡片直接复制；**点击任意卡片后卡片次数与侧栏「常用」应立刻 +1**；拖动排序改为卡片右上角的手柄按钮：按住手柄后卡片跟随指针移动、原位出现虚线占位块指明落点（松手后刷新顺序仍在），点手柄本身不会计入使用次数；「常用 / 收藏」与搜索状态下不显示手柄、无法拖动；拖动到列表上下边缘会自动滚动；数据较多时只有右侧卡片区滚动，页面标题与左侧分类栏保持不动；收藏与常用视图、搜索、导入/导出勾选弹窗（默认全选、全选/半选）、深色模式与 860px 单列布局；老数据升级后内置示例应被清理且用户自建 Prompt 保留。
-- 预览页：分别打开 `tests/test.md`、`tests/test.json`、`tests/test.jsonc`、`tests/test.puml`，检查工具栏、主题切换、TOC 跳转、JSON 折叠与 JSONC 注释解析、PlantUML 时序图/类图/活动图渲染（需开启「允许访问文件网址」）。
+- 预览页：分别打开 `tests/test.md`、`tests/test.json`、`tests/test.jsonc`、`tests/test.puml`，检查工具栏、主题切换、TOC 跳转、JSON 折叠与 JSONC 注释解析、PlantUML 时序图/类图/活动图渲染；`.md` 工具栏的打印按钮应导出仅正文的 A4 PDF（需开启「允许访问文件网址」）。
 - 控制台必须无报错；改动 CSS 后换端口或新的隔离上下文，避免缓存误判。
 
 ## 10. 开发完成后：同步文档（强制）
@@ -250,4 +251,6 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - `background.js` 只写 `toolsx.todo.notified`，不要让它回写 `toolsx.todo.tasks`，否则会覆盖用户正在编辑的任务；`app-window.js` 用 `lastWrites` 值比对抑制自身写入回声，新增同步逻辑时保持这一机制。
 - MV3 service worker 会被回收，所有定时提醒都必须走 `chrome.alarms`（不要在后台用 `setInterval`）；每次任务变化后都要重新 `chrome.alarms.clear` + `create` 排期。
 - `widget/todo-widget.js` 是 content script：改完必须**刷新扩展并新开标签页**才生效；它直接写 storage，绕过 sandbox，因此工具页依赖 `TOOLSX_STORE_SYNC` 才能看到变化。
+- 导出 PDF 走浏览器打印（`window.print()`），依赖 iframe 的 `allow-modals`；打印时用 `html.print-md` + `@media print` 隐藏除 `.print-doc` 外的所有 body 子元素（含 `body::after` 纹理层与 topbar / 目录树 / TOC），并临时把 `data-theme` 切成 light，否则深色主题会把页面和代码高亮打成深底。`.print-doc` 在屏幕上必须 `display:none`，避免 `afterprint` 未触发时残留正文副本。
+- 打印不能依赖 `-webkit-print-color-adjust` 保留 dark 代码块（Chrome 默认不打印背景），打印样式里把 `pre` 改成浅底深字，token 颜色用浅色主题值。
 - 媒体查询里把多栏网格改成单列（`grid-template-columns:1fr`）时，grid item 仍会被内部横向滚动区（如横向分类导航）的 min-content 撑宽，导致整页横向溢出 → 给该 item 加 `min-width:0`（Prompt 的 `.pr-side` / `.pr-nav` 即为此）。

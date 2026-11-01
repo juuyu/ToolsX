@@ -68,3 +68,20 @@
 /* 标题树条目（Docs 右侧目录 / 预览页目录） */
 .toc-item{display:block;width:100%;padding:5px 8px 5px calc(9px + var(--toc-d,0) * 13px);border:none;border-radius:6px;background:none;color:var(--ink-2);font-family:inherit;font-size:12.5px;line-height:1.5;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:background .13s,color .13s}
 .toc-item:hover{background:var(--accent-wash);color:var(--accent-deep)}
+
+/* 打印 / 导出 PDF（mdPrintHtml 生成的临时正文容器；屏幕上隐藏，仅打印时可见） */
+.print-doc{display:none}
+@media print{
+  @page{size:A4;margin:16mm}
+  html.print-md,html.print-md body{background:var(--panel)!important;overflow:visible!important;height:auto!important}
+  html.print-md body::after{display:none!important}
+  html.print-md body>*:not(.print-doc){display:none!important}
+  html.print-md .print-doc{display:block!important;width:auto;max-width:none;margin:0;padding:0;background:var(--panel)}
+  html.print-md .print-doc .blk{padding:0;margin:0;border:none}
+  html.print-md .print-doc .tbl-bar{display:none!important}
+  html.print-md .print-doc pre{background:var(--paper-deep)!important;color:var(--ink)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html.print-md .print-doc pre code{color:inherit!important}
+  html.print-md .print-doc .puml-block{background:var(--panel);border-color:var(--line-2)}
+  html.print-md .print-doc h1,html.print-md .print-doc h2,html.print-md .print-doc h3,html.print-md .print-doc h4{break-after:avoid}
+  html.print-md .print-doc pre,html.print-md .print-doc table,html.print-md .print-doc img,html.print-md .print-doc .puml-block{break-inside:avoid}
+}

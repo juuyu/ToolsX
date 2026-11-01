@@ -234,6 +234,7 @@ function renderDocEditor(){
       <div class="seg">${[['edit','源码'],['view','预览']].map(([m,t])=>`<button class="${docMode===m?'on':''}" onclick="setDocMode('${m}')">${t}</button>`).join('')}</div>
       ${docMode!=='edit'?`<button class="icon-btn" id="liveToggle" title="${docUnlocked?'锁定预览（只读）':'解锁预览（点击区块编辑）'}" style="${docUnlocked?'color:var(--accent-deep);background:var(--accent-soft)':''}">${docUnlocked?ICO_EDIT:ICO_LOCK}</button>`:''}
       <div class="spacer"></div>
+      <button class="icon-btn" id="dePdfBtn" title="导出 PDF">${ICO_PRINT}</button>
       <button class="icon-btn de-toc-btn" id="deTocBtn" title="目录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></button>
     </div>
     <div class="de-body">
@@ -245,6 +246,7 @@ function renderDocEditor(){
     </div>`;
   bindDocToc();
   const lt=document.getElementById('liveToggle');if(lt)lt.onclick=toggleLive;
+  const pdf=document.getElementById('dePdfBtn');if(pdf)pdf.onclick=exportDocPdf;
   const tb=document.getElementById('deTocBtn');
   if(tb)tb.onclick=()=>{prefs.tocCollapsed=!prefs.tocCollapsed;savePrefs();buildDocToc()};
   const ta=document.getElementById('docEditor');
@@ -267,6 +269,31 @@ function renderDocEditor(){
   ta.addEventListener('keydown',ev=>{if(ev.key==='Enter')smartEnter(ta,ev)});
   const pv=document.getElementById('docPreview');
   if(pv)buildPreviewInto(pv,dc.content||'');
+}
+/* 导出 PDF：仅打印 Markdown 正文，由打印对话框另存为 PDF（版式见 markdown.css 的 @media print） */
+function exportDocPdf(){
+  const note=currentNote();
+  if(!note){toast('请先选择一条笔记');return}
+  if(note.fmt==='json'){toast('JSON 笔记不支持导出 Markdown PDF');return}
+  const pv=document.getElementById('docPreview');
+  if(editingIdx!==null){
+    const be=document.querySelector('.blk-edit');
+    commitEdit(be?be.value:'',true);
+    if(pv)buildPreviewInto(pv,docText(note));
+  }
+  let html;
+  if(docMode==='edit'||!pv){
+    const ta=document.getElementById('docEditor');
+    html=splitBlocks(ta?ta.value:'').map(b=>'<div class="blk">'+(b.type==='fm'?renderFm(b.src):mdRender(b.src))+'</div>').join('');
+  }else{
+    const tmp=document.createElement('div');
+    tmp.innerHTML=pv.innerHTML;
+    tmp.querySelectorAll('.tbl-bar').forEach(el=>el.remove());
+    tmp.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+    html=tmp.innerHTML;
+  }
+  if(!html.trim()){toast('笔记内容为空');return}
+  if(!mdPrintHtml(html))toast('当前环境不支持打印');
 }
 function startEdit(idx,e){
   if(editingIdx!==null)return;

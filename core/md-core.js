@@ -177,3 +177,27 @@ function tocHtml(items){
     return '<button type="button" class="toc-item" data-h="'+esc(it.id)+'" style="--toc-d:'+d+'"><span class="toc-item-txt">'+esc(it.text)+'</span></button>';
   }).join('');
 }
+/* ---------- Markdown 打印 / 导出 PDF ---------- */
+/* 把渲染后的正文临时挂到 body 顶层：打印时隐藏应用外壳、强制浅色，
+   由浏览器打印对话框另存为 PDF。版式规则见 core/markdown.css 的 @media print。 */
+function mdPrintHtml(html){
+  if(!html)return false;
+  document.querySelectorAll('.print-doc').forEach(el=>el.remove());
+  const wrap=document.createElement('div');
+  wrap.className='md print-doc';
+  wrap.innerHTML=html;
+  document.body.appendChild(wrap);
+  const root=document.documentElement;
+  const prevTheme=root.dataset.theme;
+  root.classList.add('print-md');
+  if(prevTheme==='dark')root.dataset.theme='light';
+  const done=()=>{
+    root.classList.remove('print-md');
+    if(prevTheme==='dark')root.dataset.theme='dark';
+    if(wrap.parentNode)wrap.parentNode.removeChild(wrap);
+    window.removeEventListener('afterprint',done);
+  };
+  window.addEventListener('afterprint',done);
+  try{window.print()}catch(e){done();return false}
+  return true;
+}

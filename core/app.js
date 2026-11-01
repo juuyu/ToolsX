@@ -27,7 +27,7 @@ function switchView(v, silent) {
   if (sb) { sb.value = ''; sb.placeholder = SEARCH_PH[v] || ''; }
   document.querySelectorAll('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.view === v));
   document.querySelectorAll('.view').forEach((s) => s.classList.remove('active'));
-  const wide = v === 'json';
+  const wide = v === 'json' || v === 'docs';
   const contentEl = document.querySelector('.content'), topbarEl = document.querySelector('.topbar');
   if (contentEl) contentEl.classList.toggle('wide', wide);
   if (topbarEl) topbarEl.classList.toggle('wide', wide);

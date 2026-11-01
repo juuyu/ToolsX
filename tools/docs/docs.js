@@ -49,6 +49,7 @@ function noteRow(n){
   </div>`;
 }
 async function selectNote(id){
+  closeDocsTree();
   if(selDoc===id)return;
   await flushDocSaves();
   const r=findNode(DB.docs,id);
@@ -88,9 +89,12 @@ function applyTreeCollapsed(){
   const L=document.getElementById('docsLayout');if(!L)return;
   L.classList.toggle('tree-collapsed',treeCollapsed);
   prefs.docsTree=treeCollapsed;savePrefs();
+  const b=document.getElementById('docsTreeBtn');
+  if(b){b.classList.toggle('on',!treeCollapsed);b.title=treeCollapsed?'展开目录':'收起目录'}
   updateDocsTools();
 }
 function toggleDocsTree(){treeCollapsed=!treeCollapsed;applyTreeCollapsed();toast(treeCollapsed?'已收起目录':'已展开目录')}
+function closeDocsTree(){if(treeCollapsed)return;treeCollapsed=true;applyTreeCollapsed()}
 function setAllOpen(list,open){list.forEach(n=>{if(n.type==='folder'){n.open=open;setAllOpen(n.children||[],open)}})}
 function toggleAllFolders(){
   const open=anyFolderOpen(DB.docs);
@@ -197,17 +201,17 @@ function buildDocToc(){
   const pv=document.getElementById('docPreview');
   if(!toc||!list||!pv)return;
   const items=mdOutline(pv,'doc-h-');
-  toc.classList.toggle('hide',!items.length||docMode==='edit');
+  const has=items.length&&docMode!=='edit';
+  toc.classList.toggle('hide',!has);
   toc.classList.toggle('collapsed',!!prefs.tocCollapsed);
   list.innerHTML=items.length?tocHtml(items):'';
+  const btn=document.getElementById('deTocBtn');
+  if(btn){btn.classList.toggle('hide',!has);btn.classList.toggle('on',!prefs.tocCollapsed)}
 }
 function bindDocToc(){
   const toc=document.getElementById('docToc');
   if(!toc)return;
   toc.addEventListener('click',e=>{
-    if(e.target.closest('[data-act="toc-toggle"]')){
-      prefs.tocCollapsed=!prefs.tocCollapsed;saveState();buildDocToc();return;
-    }
     const it=e.target.closest('.toc-item');
     if(it){const el=document.getElementById(it.dataset.h);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
   });
@@ -233,20 +237,20 @@ function renderDocEditor(){
       <span class="de-meta">${fmtTime(note.updatedAt)}</span>
       <div class="seg">${[['edit','源码'],['view','预览']].map(([m,t])=>`<button class="${docMode===m?'on':''}" onclick="setDocMode('${m}')">${t}</button>`).join('')}</div>
       ${docMode!=='edit'?`<button class="icon-btn" id="liveToggle" title="${docUnlocked?'锁定预览（只读）':'解锁预览（点击区块编辑）'}" style="${docUnlocked?'color:var(--accent-deep);background:var(--accent-soft)':''}">${docUnlocked?ICO_EDIT:ICO_LOCK}</button>`:''}
+      <div class="spacer"></div>
+      <button class="icon-btn de-toc-btn" id="deTocBtn" title="目录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"></path></svg></button>
     </div>
     <div class="de-body">
       <textarea id="docEditor" class="${docMode==='view'?'hide':''}" placeholder="# 开始书写 Markdown …"></textarea>
       <div id="docPreview" class="md ${docMode==='edit'?'hide':''}"></div>
       <aside class="doc-toc hide" id="docToc">
-        <button class="toc-rail" data-act="toc-toggle" title="展开目录">${ICO_CHEV_L}<span>目录</span></button>
-        <div class="toc-panel">
-          <div class="toc-head"><span>目录</span><button class="icon-btn" data-act="toc-toggle" title="收起目录">${ICO_CHEV_R}</button></div>
-          <div class="toc-list" id="docTocList"></div>
-        </div>
+        <div class="toc-list" id="docTocList"></div>
       </aside>
     </div>`;
   bindDocToc();
   const lt=document.getElementById('liveToggle');if(lt)lt.onclick=toggleLive;
+  const tb=document.getElementById('deTocBtn');
+  if(tb)tb.onclick=()=>{prefs.tocCollapsed=!prefs.tocCollapsed;savePrefs();buildDocToc()};
   const ta=document.getElementById('docEditor');
   ta.value=dc.content||'';
   let t;
@@ -420,6 +424,8 @@ function smartEnter(ta,ev){
   }else return;
   ev.preventDefault();
 }
+/* 目录抽屉：Esc 关闭 */
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&view==='docs')closeDocsTree()});
 /* ---------- docs: 增删改 ---------- */
 function askName(title,val,cb){promptText({title,label:'名称',value:val,placeholder:'输入名称',ok:'确定',cancel:'取消',empty:'请填写名称'},cb)}
 function newNote(folderId){

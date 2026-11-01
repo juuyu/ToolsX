@@ -3,41 +3,38 @@
    （目录树容器 / 编辑器 / 标题树面板 / 块级编辑 / frontmatter / 表格编辑）
    通用组件见 core.css，Markdown 与标题条目见 markdown.css
 ============================================================ */
-.docs-layout{display:grid;grid-template-columns:290px 1fr;gap:18px;align-items:start}
-.docs-layout.tree-collapsed{grid-template-columns:26px 1fr;gap:12px}
+/* 全宽视口布局：页头在顶部，正文区域铺满剩余高度并内部滚动 */
+.view.active#view-docs{display:flex;flex-direction:column;height:calc(100vh - 100px);min-height:480px}
+.docs-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.docs-head h2{font-size:20px}
+.docs-acts{margin:0}
+.docs-tree-btn.on{color:var(--accent-deep);border-color:var(--accent);background:var(--accent-wash)}
+.docs-layout{position:relative;flex:1;min-height:0;display:block}
+
+/* 左侧目录：悬浮抽屉，默认收起，展开时覆盖正文而不挤压布局 */
+.docs-tree{position:absolute;left:0;top:0;bottom:0;width:300px;z-index:50;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-lg);padding:12px}
 .docs-layout.tree-collapsed .docs-tree{display:none}
-.docs-tree{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:12px}
-.docs-toggle{display:none;align-self:start;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:26px;padding:12px 0;background:transparent;border:1px solid transparent;border-radius:999px;color:var(--ink-3);opacity:.55;cursor:pointer;transition:opacity .18s,background .18s,border-color .18s,color .18s,box-shadow .18s,transform .18s}
-.docs-layout.tree-collapsed .docs-toggle{display:flex}
-.docs-toggle:hover{opacity:1;border-color:var(--line);color:var(--accent-deep);background:var(--panel);box-shadow:var(--shadow-sm);transform:translateX(2px)}
-.docs-toggle svg{width:12px;height:12px;flex-shrink:0;transition:transform .18s}
-.docs-toggle:hover svg{transform:translateX(1px)}
-.docs-toggle .dt-label{writing-mode:vertical-rl;font-size:10.5px;font-weight:600;letter-spacing:.24em;line-height:1}
+.docs-tree-head{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:2px 4px 10px}
+.docs-tree .tree{flex:1;min-height:0;max-height:none}
+.docs-scrim{display:none;position:absolute;inset:0;z-index:45;background:transparent}
+.docs-layout:not(.tree-collapsed) .docs-scrim{display:block}
 
 /* 编辑器外壳 */
-.docs-editor{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);display:flex;flex-direction:column;min-height:540px;overflow:hidden}
-.de-head{display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.docs-editor{height:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.de-head{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;flex-shrink:0}
+.de-head .spacer{flex:1}
+.de-toc-btn.on{color:var(--accent-deep);background:var(--accent-soft)}
 .de-title{font-family:var(--serif);font-size:17px;font-weight:600}
 .de-meta{font-size:11px;color:var(--ink-3);font-family:var(--mono)}
-.de-body{flex:1;display:flex;min-height:0}
-#docEditor,.json-src{flex:1;border:none;outline:none;resize:none;padding:22px 24px;font-family:var(--mono);font-size:13px;line-height:1.8;background:transparent;color:var(--ink);min-width:0}
+.de-body{position:relative;flex:1;display:flex;min-height:0}
+#docEditor,.json-src{flex:1;border:none;outline:none;resize:none;padding:22px 24px;font-family:var(--mono);font-size:13px;line-height:1.8;background:transparent;color:var(--ink);min-width:0;min-height:0}
 #docPreview{flex:1;overflow:auto;padding:22px 26px;min-width:0;background:var(--paper)}
 
-/* 标题树面板 */
-.doc-toc{flex:0 0 196px;min-width:0;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--panel)}
-.doc-toc.collapsed{flex-basis:28px}
-.doc-toc.collapsed .toc-panel{display:none}
-.toc-rail{display:none;width:28px;height:100%;min-height:120px;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:none;background:none;color:var(--ink-3);cursor:pointer;opacity:.6;transition:opacity .16s,color .16s}
-.doc-toc.collapsed .toc-rail{display:flex}
-.toc-rail:hover{opacity:1;color:var(--accent-deep)}
-.toc-rail svg{width:12px;height:12px}
-.toc-rail span{writing-mode:vertical-rl;font-size:10.5px;font-weight:600;letter-spacing:.22em;line-height:1}
-.toc-panel{display:flex;flex:1;min-height:0;flex-direction:column}
-.toc-head{display:flex;align-items:center;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line)}
-.toc-head span{flex:1;font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase}
-.toc-head .icon-btn{width:24px;height:24px}
-.toc-head .icon-btn svg{width:12px;height:12px}
-.toc-list{flex:1;min-height:0;overflow:auto;padding:8px 6px 16px}
+/* 右侧标题树：悬浮面板，展开时覆盖正文右侧，正文滚动不影响 */
+.doc-toc{position:absolute;top:0;right:0;bottom:0;width:236px;z-index:40;display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow-md)}
+.doc-toc.collapsed{display:none}
+@media (min-width:861px){.de-body:has(.doc-toc:not(.collapsed):not(.hide)) #docPreview{padding-right:262px}}
+.toc-list{flex:1;min-height:0;overflow:auto;padding:12px 10px 18px}
 
 /* 块级所见即所得编辑 */
 .md .blk{border:1px dashed transparent;border-radius:8px;padding:1px 10px;margin:0 -10px;transition:border-color .12s,background .12s}
@@ -66,11 +63,10 @@
 .tbl-bar button:hover{border-color:var(--accent);color:var(--accent-deep)}
 .cell-edit{width:100%;box-sizing:border-box;border:1px solid var(--accent);border-radius:5px;font:inherit;font-size:12.5px;padding:1px 6px;outline:none;background:var(--panel);color:var(--ink);box-shadow:0 0 0 3px rgba(201,100,66,.12)}
 
-@media (max-width:1100px){.doc-toc{display:none}}
+@media (max-width:860px){.doc-toc{width:min(78%,280px)}}
 @media (max-width:820px){
-  .docs-layout,.docs-layout.tree-collapsed{grid-template-columns:1fr}
-  .docs-toggle{flex-direction:row;justify-content:center;gap:7px;width:auto;align-self:start;padding:7px 16px;margin-bottom:2px}
-  .docs-toggle .dt-label{writing-mode:horizontal-tb;letter-spacing:.12em}
+  .docs-tree{width:min(320px,86vw)}
+  .docs-head h2{font-size:19px}
   .docs-editor{min-height:420px}
   .de-body{min-height:300px}
 }

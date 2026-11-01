@@ -68,18 +68,15 @@
       </section>
 
       <section class="view" id="view-docs">
-        <div class="page-head docs-head">
-          <h2>Docs</h2>
-          <div class="toolbar docs-acts">
-            <button class="btn btn-primary btn-sm" onclick="newNote(null)">新建笔记</button>
-            <button class="btn btn-ghost btn-sm" onclick="newFolder(null)">新建文件夹</button>
-            <button class="btn btn-ghost btn-sm" id="foldAllBtn" title="全部折叠" onclick="toggleAllFolders()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"></polyline><polyline points="17 18 12 13 7 18"></polyline></svg></button>
-            <button class="btn btn-ghost btn-sm docs-tree-btn" id="docsTreeBtn" title="展开目录" onclick="toggleDocsTree()">目录</button>
-          </div>
-        </div>
-        <div class="docs-layout tree-collapsed" id="docsLayout">
-          <aside class="docs-tree">
-            <div class="docs-tree-head">笔记目录</div>
+        <div class="page-head"><h2>Docs</h2></div>
+        <div class="docs-layout" id="docsLayout">
+          <div class="docs-tree">
+            <div class="docs-tools">
+              <button class="mini" onclick="newNote(null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>新建笔记</button>
+              <button class="mini" onclick="newFolder(null)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>文件夹</button>
+              <button class="mini mini-ico" id="foldAllBtn" title="全部折叠" onclick="toggleAllFolders()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"></polyline><polyline points="17 18 12 13 7 18"></polyline></svg></button>
+              <button class="mini mini-ico" title="收起目录" onclick="toggleDocsTree()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            </div>
             <div class="tree" id="docTree"><div class="tree-row open" draggable="true" data-id="mvfee27stk14c" onclick="toggleFolder('mvfee27stk14c')">
       <span class="tw"><svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></span>
       <svg class="f-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-8l-2-2z"></path></svg>
@@ -139,8 +136,8 @@
       <button class="icon-btn danger" title="删除" onclick="event.stopPropagation();delNode('mvfee27s9wdx5')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"></path></svg></button>
     </span>
   </div></div></div>
-          </aside>
-          <div class="docs-scrim" id="docsScrim" onclick="closeDocsTree()"></div>
+          </div>
+          <button class="docs-toggle" id="docsToggle" title="展开目录" onclick="toggleDocsTree()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg><span class="dt-label">目录</span></button>
           <div class="docs-editor" id="docEditorPanel">
     <div class="de-head">
       <span class="de-title">使用指南</span>

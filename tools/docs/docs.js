@@ -49,7 +49,6 @@ function noteRow(n){
   </div>`;
 }
 async function selectNote(id){
-  closeDocsTree();
   if(selDoc===id)return;
   await flushDocSaves();
   const r=findNode(DB.docs,id);
@@ -89,12 +88,9 @@ function applyTreeCollapsed(){
   const L=document.getElementById('docsLayout');if(!L)return;
   L.classList.toggle('tree-collapsed',treeCollapsed);
   prefs.docsTree=treeCollapsed;savePrefs();
-  const b=document.getElementById('docsTreeBtn');
-  if(b){b.classList.toggle('on',!treeCollapsed);b.title=treeCollapsed?'展开目录':'收起目录'}
   updateDocsTools();
 }
 function toggleDocsTree(){treeCollapsed=!treeCollapsed;applyTreeCollapsed();toast(treeCollapsed?'已收起目录':'已展开目录')}
-function closeDocsTree(){if(treeCollapsed)return;treeCollapsed=true;applyTreeCollapsed()}
 function setAllOpen(list,open){list.forEach(n=>{if(n.type==='folder'){n.open=open;setAllOpen(n.children||[],open)}})}
 function toggleAllFolders(){
   const open=anyFolderOpen(DB.docs);
@@ -424,8 +420,6 @@ function smartEnter(ta,ev){
   }else return;
   ev.preventDefault();
 }
-/* 目录抽屉：Esc 关闭 */
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&view==='docs')closeDocsTree()});
 /* ---------- docs: 增删改 ---------- */
 function askName(title,val,cb){promptText({title,label:'名称',value:val,placeholder:'输入名称',ok:'确定',cancel:'取消',empty:'请填写名称'},cb)}
 function newNote(folderId){

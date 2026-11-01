@@ -158,7 +158,7 @@ async function storeInit() {
 }
 
 /* ---------- 全局偏好 / 主题 ---------- */
-const prefs = { theme: '', docsTree: true, lastView: '', tocCollapsed: false };
+const prefs = { theme: '', docsTree: false, lastView: '', tocCollapsed: false };
 let prefsT = 0;
 function savePrefs() {
   clearTimeout(prefsT);

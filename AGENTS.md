@@ -140,7 +140,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - 布局用 `.content`（`margin: 0 auto` 居中）+ `.view`（`display:none`，`.active` 才显示）。
 - `overflow-x:hidden` 会杀死 sticky；页面级横向裁切只能写 `overflow-x: clip`。
 - 需要「全宽铺满 + 视口固定高」的视图（目前为 JSON、Docs）：在 `core/app.js` 的 `switchView` 里给 `.content` / `.topbar` 加 `wide` class（`core.css` 中 `.content.wide` / `.topbar.wide` 取消 `max-width` 并压缩左右内边距），视图自身用 `.view.active#view-<name>{display:flex;flex-direction:column;height:calc(100vh - 100px)}`，面板设 `flex:1;min-height:0` 并在内部滚动，避免整页出现滚动条。
-- Docs 的左侧目录与右侧 TOC 都是**悬浮层**：目录用 `position:absolute` 抽屉（默认收起，`.tree-collapsed` 隐藏，`.docs-scrim` 捕获外部点击），TOC 用 `position:absolute;right:0` 浮在正文右侧；两者都不占布局列宽，正文滚动由 `#docPreview` 内部完成，页头与浮层保持不动。
+- Docs 的左侧目录是**常规布局列**（`grid-template-columns:290px 1fr`，`.tree-collapsed` 收成 `26px 1fr` 并显示竖向 `.docs-toggle` 按钮）；右侧 TOC 是**悬浮层**，用 `position:absolute;right:0` 浮在正文右侧，不占布局列宽，正文滚动由 `#docPreview` 内部完成，页头与 TOC 保持不动。
 - 多栏工具参考 `tools/postman/postman.css` 的 `.api-layout` 高度分配：左侧目录与右侧详情共用同一列高，详情内上卡片固定高度（`min(380px, 60%)`）并让 Params/Headers/Body 区域内部滚动；窄屏（`max-width:860px`）退回单列自适应。
 - 英文按钮/标签加 `white-space: nowrap`，避免文案换行挤坏布局；侧栏宽度要给英文文案留够空间。
 - 媒体查询沿用现有断点：`1080px`（JSON 双栏转单栏）、`860px`（Postman 详情单列 / Docs TOC 缩窄）、`820px`（Docs 抽屉与页头紧凑）。
@@ -175,7 +175,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 
 ## 8. 修改现有工具的注意点
 
-- Docs：正文按 key 懒加载（`docCache` + `loadDoc`），切换/离开前必须 `flushDocSaves()`；预览块编辑依赖 `splitBlocks` 的块边界，改 Markdown 渲染时不要破坏 `.blk` 结构。左侧目录抽屉由 `treeCollapsed`（`prefs.docsTree`，默认 `true` 收起）控制，`applyTreeCollapsed()` 同时更新页头 `#docsTreeBtn` 状态；`closeDocsTree()` 用于外部点击 / Esc / 选中笔记后的静默关闭，不要在这些路径弹 toast。右侧 TOC 的开关按钮位于编辑器 `.de-head` 工具栏（`#deTocBtn`），状态存 `prefs.tocCollapsed`，`buildDocToc()` 负责同步按钮显隐与 `.on` 高亮，旧的竖向 `.toc-rail` 已移除。
+- Docs：正文按 key 懒加载（`docCache` + `loadDoc`），切换/离开前必须 `flushDocSaves()`；预览块编辑依赖 `splitBlocks` 的块边界，改 Markdown 渲染时不要破坏 `.blk` 结构。左侧目录为常规布局列，由 `treeCollapsed`（`prefs.docsTree`，默认 `false` 展开）控制，`applyTreeCollapsed()` 切换 `.tree-collapsed` 并显示竖向 `.docs-toggle` 按钮。右侧 TOC 的开关按钮位于编辑器 `.de-head` 工具栏（`#deTocBtn`），状态存 `prefs.tocCollapsed`，`buildDocToc()` 负责同步按钮显隐与 `.on` 高亮；TOC 为右侧悬浮面板，旧的竖向 `.toc-rail` 已移除。
 - JSON：格式化/压缩/转义/还原/比对全部在前端完成；折叠树靠 `.jt-node.closed` 切换 `.jt-kids` 与 `.jt-ell`，收起数组时右侧要显示灰色元素数量。比对有两种模式（`jdMode`：`json` / `text`）：JSON 结构模式走 `diffWalk` 按路径输出差异；纯文本模式走 `jdTextDiff`（LCS，行数乘积超过 4e6 时提示分段），结果按 `add` / `del` / `same` 着色，连续相同行超过 8 行时折叠为「省略 N 行」。切换模式会复用 `renderJson` 同步页签、按钮与占位提示。
 - Postman：详情修改 400ms 防抖自动保存（`apiAutoSave`/`apiPersistCurrent`），地址被清空时不得覆盖已保存内容；改请求结构时同步 `apiSnapshot`、导入导出格式（`url/method/headers/body`）与 `apiNorm*` 归一化。
 - Prompt：正文中的参数只认 `{{参数名}}`（`PR_VAR_SRC`）；`prItemNorm` 始终用 `prMergeParams` 用正文里的参数键为准重算列表，已配置的 `label/def/multi/req` 保留、丢失的键直接移除。点击卡片即走 `prUseRecord`（`n+1`、更新 `t`），“常用/收藏”按 `n` 降序、`t` 降序排序，其余视图按 `prState.items` 数组顺序展示。手动排序由卡片右上角手柄拖动实现（`.pr-drag` + `prGridPointerDown` / `prDragMove` / `prCommitOrder`，仅「全部 / 分类 / 未分类」渲染手柄，搜索与「常用 / 收藏」不渲染手柄因此不可拖动；拖动到列表上下边缘会自动滚动）：起拖时卡片改为 `position:fixed` 跟随指针（`.pr-card.dragging`），原位插入 `.pr-slot` 虚线占位块，落点只移动占位块，松手后按占位块位置回填顺序再重渲染；拖动只交换当前视图内条目的槽位，不改动其他视图顺序；拖动结束后的 click 会被 `prGridClickCapture` 拦截，避免误触复制。导入兼容 `prompts / items / 数组 / 单对象` 与 `content|prompt`、`category|categoryName|cat`；同名分类合并、同名 Prompt 加 `(2)` 序号。导出格式 `{type:'toolsx.prompt', version:1, categories, prompts}`，分类按名称写入以便跨实例迁移。
@@ -202,7 +202,7 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - Todo：新建 / 完成 / 星标（Focus）、任务详情与步骤、日期时间与提醒下拉、清除已完成、刷新后数据仍在、深色模式；直接打开 `app.html` 时提醒退化为页面内通知。
 - Todo 悬浮面板（扩展内）：刷新扩展后**新开标签页**打开任意 https 网页，检查右上角按钮、Focus 数量、快捷添加、勾选完成、打开完整页面、隐藏按钮；拖动悬浮球后位置应跨页面保留，面板自动避让到视口内；在工具页改任务后悬浮面板应实时同步。
 - 系统通知：设置一条 1～2 分钟后的提醒，关闭工具页后仍能收到通知；点击通知应打开 Todo 页。
-- Docs：标题下无描述、全宽视口布局；页头工具栏含 新建笔记 / 新建文件夹 / 全部折叠 / 目录；左侧目录默认收起，点「目录」以悬浮抽屉覆盖正文（正文宽度不变），点外部 / Esc / 选中笔记后关闭；源码模式 textarea 填满编辑区高度；预览模式页头固定、正文内部滚动；编辑器头部的列表按钮可开合右侧悬浮 TOC，滚动正文时 TOC 不动；目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在。
+- Docs：标题下无描述、全宽视口布局；左侧目录默认展开为常规布局列（内含 新建笔记 / 文件夹 / 全部折叠 / 收起目录），收起后变成竖向「目录」按钮，不遮挡正文；源码模式 textarea 填满编辑区高度；预览模式页头固定、正文内部滚动；编辑器头部的列表按钮可开合右侧悬浮 TOC，滚动正文时 TOC 不动；目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在。
 - JSON：版面应左右铺满、标题无描述、操作按钮与页签在顶部同一行、面板占满视口且页面无纵向滚动条；格式化/压缩/转义/还原、结果折叠与搜索；比对页分别用 JSON 结构模式（合法 JSON 按路径出差异）与纯文本模式（逐行出增删、长段相同行折叠）验证；深色模式。
 - Postman：`.csel` 下拉开合与方法配色、新建文件夹/请求弹窗、Params/Headers/Body 编辑与自动保存、导出下载、响应保存为示例。
 - Prompt：首次进入应只有 5 个默认分类、没有内置 Prompt；新建分类 / 重命名 / 删除（删除后其中 Prompt 变未分类）；新建 Prompt 后正文里的 `{{参数}}` 自动出现在参数配置区；点击带参数的卡片应弹出输入框并实时预览最终 Prompt（必填为空时阻止复制），无参数卡片直接复制；**点击任意卡片后卡片次数与侧栏「常用」应立刻 +1**；拖动排序改为卡片右上角的手柄按钮：按住手柄后卡片跟随指针移动、原位出现虚线占位块指明落点（松手后刷新顺序仍在），点手柄本身不会计入使用次数；「常用 / 收藏」与搜索状态下不显示手柄、无法拖动；拖动到列表上下边缘会自动滚动；数据较多时只有右侧卡片区滚动，页面标题与左侧分类栏保持不动；收藏与常用视图、搜索、导入/导出勾选弹窗（默认全选、全选/半选）、深色模式与 860px 单列布局；老数据升级后内置示例应被清理且用户自建 Prompt 保留。

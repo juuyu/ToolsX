@@ -5,19 +5,19 @@
 ============================================================ */
 /* 全宽视口布局：页头在顶部，正文区域铺满剩余高度并内部滚动 */
 .view.active#view-docs{display:flex;flex-direction:column;height:calc(100vh - 100px);min-height:480px}
-.docs-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
-.docs-head h2{font-size:20px}
-.docs-acts{margin:0}
-.docs-tree-btn.on{color:var(--accent-deep);border-color:var(--accent);background:var(--accent-wash)}
-.docs-layout{position:relative;flex:1;min-height:0;display:block}
-
-/* 左侧目录：悬浮抽屉，默认收起，展开时覆盖正文而不挤压布局 */
-.docs-tree{position:absolute;left:0;top:0;bottom:0;width:300px;z-index:50;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--shadow-lg);padding:12px}
+.docs-layout{flex:1;min-height:0;display:grid;grid-template-columns:290px 1fr;gap:18px;align-items:stretch}
+.docs-layout.tree-collapsed{grid-template-columns:26px 1fr;gap:12px}
 .docs-layout.tree-collapsed .docs-tree{display:none}
-.docs-tree-head{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:2px 4px 10px}
+
+/* 左侧目录：常规布局列，收起时留下竖向「目录」按钮 */
+.docs-tree{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:12px}
 .docs-tree .tree{flex:1;min-height:0;max-height:none}
-.docs-scrim{display:none;position:absolute;inset:0;z-index:45;background:transparent}
-.docs-layout:not(.tree-collapsed) .docs-scrim{display:block}
+.docs-toggle{display:none;align-self:stretch;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:26px;padding:12px 0;background:transparent;border:1px solid transparent;border-radius:999px;color:var(--ink-3);opacity:.55;cursor:pointer;transition:opacity .18s,background .18s,border-color .18s,color .18s,box-shadow .18s,transform .18s}
+.docs-layout.tree-collapsed .docs-toggle{display:flex}
+.docs-toggle:hover{opacity:1;border-color:var(--line);color:var(--accent-deep);background:var(--panel);box-shadow:var(--shadow-sm);transform:translateX(2px)}
+.docs-toggle svg{width:12px;height:12px;flex-shrink:0;transition:transform .18s}
+.docs-toggle:hover svg{transform:translateX(1px)}
+.docs-toggle .dt-label{writing-mode:vertical-rl;font-size:10.5px;font-weight:600;letter-spacing:.24em;line-height:1}
 
 /* 编辑器外壳 */
 .docs-editor{height:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);display:flex;flex-direction:column;min-height:0;overflow:hidden}
@@ -65,8 +65,9 @@
 
 @media (max-width:860px){.doc-toc{width:min(78%,280px)}}
 @media (max-width:820px){
-  .docs-tree{width:min(320px,86vw)}
-  .docs-head h2{font-size:19px}
+  .docs-layout,.docs-layout.tree-collapsed{grid-template-columns:1fr}
+  .docs-toggle{flex-direction:row;justify-content:center;gap:7px;width:auto;align-self:start;padding:7px 16px;margin-bottom:2px}
+  .docs-toggle .dt-label{writing-mode:horizontal-tb;letter-spacing:.12em}
   .docs-editor{min-height:420px}
   .de-body{min-height:300px}
 }

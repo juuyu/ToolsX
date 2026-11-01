@@ -2,16 +2,22 @@
    Tools-X · App Shell
    视图切换、全局搜索与启动（最后加载，boot 在末尾执行）
 ============================================================ */
-let view = 'docs', query = '';
-const VIEWS = ['docs', 'json', 'api'];
-const SEARCH_PH = { docs: '搜索笔记名称或内容…  / 聚焦', json: '搜索笔记名称或内容…  / 聚焦', api: 'Search request name or URL…  / to focus' };
+let view = 'todo', query = '';
+const VIEWS = ['todo', 'docs', 'json', 'api'];
+const SEARCH_PH = {
+  todo: '搜索待办标题、备注或步骤…  / 聚焦',
+  docs: '搜索笔记名称或内容…  / 聚焦',
+  json: '搜索笔记名称或内容…  / 聚焦',
+  api: 'Search request name or URL…  / to focus'
+};
 function hashView() {
   const m = location.hash.match(/^#\/([a-z]+)/);
   return m && VIEWS.includes(m[1]) ? m[1] : null;
 }
 function switchView(v, silent) {
-  if (!VIEWS.includes(v)) v = 'docs';
+  if (!VIEWS.includes(v)) v = 'todo';
   if (view === 'docs' && v !== 'docs') flushDocSaves();
+  if (view === 'todo' && v !== 'todo') flushTodo();
   view = v;
   prefs.lastView = v;
   savePrefs();
@@ -23,7 +29,7 @@ function switchView(v, silent) {
   const el = document.getElementById('view-' + v);
   if (el) el.classList.add('active');
   const addBtn = document.getElementById('addBtn'), addLabel = document.getElementById('addLabel');
-  const labels = { docs: '新建笔记', json: null, api: null };
+  const labels = { todo: null, docs: '新建笔记', json: null, api: null };
   addBtn.style.display = labels[v] ? 'inline-flex' : 'none';
   addLabel.textContent = labels[v] || '';
   if (!silent && hashView() !== v) { try { history.pushState({ v }, '', '#/' + v); } catch (e) {} }
@@ -39,7 +45,8 @@ window.addEventListener('message', (e) => {
 });
 
 function render() {
-  if (view === 'docs') renderDocs();
+  if (view === 'todo') renderTodo();
+  else if (view === 'docs') renderDocs();
   else if (view === 'json') renderJson();
   else if (view === 'api') renderApi();
 }
@@ -54,6 +61,7 @@ document.addEventListener('keydown', (e) => {
 
 /* 页面隐藏 / 卸载前，把各工具尚未落盘的数据一次写掉 */
 function flushAll() {
+  try { flushTodo(); } catch (e) {}
   try { flushDocSaves(); } catch (e) {}
   try { flushDocTree(); } catch (e) {}
   try { apiFlush(); } catch (e) {}
@@ -65,6 +73,11 @@ window.addEventListener('beforeunload', () => flushAll());
 /* ---------- 启动 ---------- */
 async function boot() {
   await storeInit();
+  todoInit({
+    tasks: get(STORE.todoIndex),
+    session: get(STORE.todoSession),
+    settings: get(STORE.todoSettings)
+  });
   docsInit(get(STORE.docsIndex), keysByPrefix(DOC_NOTE_PREFIX));
   apiInit({
     index: get(STORE.apiIndex),
@@ -77,7 +90,7 @@ async function boot() {
   if (prefs.theme) document.documentElement.dataset.theme = prefs.theme;
   treeCollapsed = !!prefs.docsTree;
   applyTreeCollapsed();
-  const v = hashView() || (VIEWS.includes(prefs.lastView) ? prefs.lastView : null) || 'docs';
+  const v = hashView() || (VIEWS.includes(prefs.lastView) ? prefs.lastView : null) || 'todo';
   switchView(v, true);
   try { if (hashView() !== v) history.replaceState({ v }, '', '#/' + v); } catch (e) {}
 }

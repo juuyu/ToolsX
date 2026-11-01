@@ -1,11 +1,12 @@
 # Tools-X
 
-一个纯浏览器运行的 Chrome 扩展（Manifest V3），把常用的开发/写作小工具集中在一个页面里：多级目录笔记（Docs）、JSON 工具、HTTP 请求调试（Postman）。无需后端服务，所有数据保存在浏览器本地，离线可用。
+一个纯浏览器运行的 Chrome 扩展（Manifest V3），把常用的开发/写作小工具集中在一个页面里：待办清单（Todo）、多级目录笔记（Docs）、JSON 工具、HTTP 请求调试（Postman）。无需后端服务，所有数据保存在浏览器本地，离线可用。
 
 ## 功能
 
 | 工具 | 能力 |
 | --- | --- |
+| Todo | 参考 Microsoft To Do 的智能列表（我的一天 / 计划 / 重要 / 全部 / 已完成）；任务步骤、备注、截止日期与时间；到点通过浏览器系统通知提醒；所有网页右上角提供可拖动的悬浮按钮（位置自动记忆），点开即可速记与勾选完成 |
 | Docs | 多级目录笔记，Markdown / JSON 两种文档格式；拖拽整理目录；块级所见即所得编辑；标题树（TOC）跳转与折叠；自动保存 |
 | JSON | 格式化 / 压缩 / 转义 / 还原 / 两个 JSON 比对；结果支持语法高亮、节点折叠与结果内搜索 |
 | Postman | 文件夹 + 请求管理，拖拽排序与跨文件夹移动；自定义请求方法/请求体类型下拉；Params / Headers / Body 编辑；响应保存为示例；请求与文件夹级导入导出 |
@@ -17,26 +18,30 @@
 2. 选择「加载已解压的扩展程序」，选中本项目根目录。
 3. 点击工具栏中的 Tools-X 图标，在浮窗中选择工具；工具页会在新标签页打开。
 4. 如需本地文件预览：在扩展详情页打开「允许访问文件网址」。
+5. 如需系统通知提醒：保持浏览器运行即可；若系统层面关闭了 Chrome 通知，请在系统设置中重新允许。
 
 ## 目录结构
 
 ```
 core/           公共层：主题变量、通用组件样式、Markdown 渲染、JSON 展示、存储、UI 组件、路由
+tools/todo/     Todo 工具（任务列表 / 详情 / 提醒设置）
 tools/docs/     Docs 工具（逻辑 + 专属样式）
 tools/json/     JSON 工具
 tools/postman/  Postman 工具
+widget/         所有网页的 Todo 悬浮面板（content script，Shadow DOM 隔离）
 preview/        本地 .md / .json 文件预览（content script + 预览外壳）
 popup.html/.js  插件浮窗入口
 app-window.html 宿主页（为 sandbox 内的 app.html 提供存储 / 网络 / 剪贴板 / 下载能力）
 app.html        工具主页面（运行在 sandbox iframe 中）
+background.js   MV3 service worker：Todo 提醒调度（alarms + notifications）
 ```
 
 ## 数据存储
 
 - 数据全部存放在 `chrome.storage.local`，按工具拆分为多个 key，不使用后端、不做云同步。
-- 主要 key：`toolsx.prefs`、`toolsx.docs.index` + `toolsx.docs.note.<id>`、`toolsx.api.index` + `toolsx.api.examples.<id>` + `toolsx.api.session` + `toolsx.api.draft`。
+- 主要 key：`toolsx.prefs`、`toolsx.todo.tasks` + `toolsx.todo.session` + `toolsx.todo.settings` + `toolsx.todo.notified`、`toolsx.docs.index` + `toolsx.docs.note.<id>`、`toolsx.api.index` + `toolsx.api.examples.<id>` + `toolsx.api.session` + `toolsx.api.draft`。
 - 旧版单 key 数据（`toolsxData` / `aihubData`）会在首次启动时自动迁移并删除。
-- 非扩展环境（直接打开 `app.html`）自动退回 `localStorage`，同样按 key 分开保存。
+- 非扩展环境（直接打开 `app.html`）自动退回 `localStorage`，同样按 key 分开保存；此时提醒退化为页面内通知。
 
 ## 开发说明
 

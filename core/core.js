@@ -15,7 +15,11 @@ const STORE = {
   apiIndex: 'toolsx.api.index',                // Postman：文件夹 / 请求定义
   apiExamples: (rid) => 'toolsx.api.examples.' + rid, // Postman：单个请求的响应示例
   apiSession: 'toolsx.api.session',            // Postman：当前选中 / 标签页 / 视图状态
-  apiDraft: 'toolsx.api.draft'                 // Postman：当前编辑中的请求草稿
+  apiDraft: 'toolsx.api.draft',                // Postman：当前编辑中的请求草稿
+  todoIndex: 'toolsx.todo.tasks',              // Todo：任务列表
+  todoSession: 'toolsx.todo.session',          // Todo：当前列表筛选 / 选中任务
+  todoSettings: 'toolsx.todo.settings',        // Todo：网页悬浮按钮等开关
+  todoNotified: 'toolsx.todo.notified'         // Todo：后台已提醒记录（background.js 写入）
 };
 const DOC_NOTE_PREFIX = STORE.docNote('');
 const API_EXAMPLE_PREFIX = STORE.apiExamples('');
@@ -65,6 +69,32 @@ function removeKeys(keys) {
   if (EMBEDDED) { try { window.parent.postMessage({ type: 'TOOLSX_REMOVE', keys: keys }, '*'); } catch (e) {} return; }
   try { keys.forEach((k) => localStorage.removeItem(k)); } catch (e) {}
 }
+
+/* 宿主页把 chrome.storage 的外部变更（浮窗 content script 写入）同步进来 */
+const storeSyncFns = new Set();
+function onStoreSync(fn) {
+  if (typeof fn !== 'function') return () => {};
+  storeSyncFns.add(fn);
+  return () => storeSyncFns.delete(fn);
+}
+function applyStoreSync(map) {
+  if (!map || typeof map !== 'object') return;
+  let changed = false;
+  Object.keys(map).forEach((k) => {
+    if (map[k] === undefined) {
+      if (k in rawStore) { delete rawStore[k]; changed = true; }
+    } else {
+      rawStore[k] = map[k];
+      changed = true;
+    }
+  });
+  if (!changed) return;
+  setTimeout(() => storeSyncFns.forEach((fn) => { try { fn(map); } catch (e) {} }), 0);
+}
+window.addEventListener('message', (e) => {
+  if (!e.data || e.data.type !== 'TOOLSX_STORE_SYNC') return;
+  applyStoreSync(e.data.keys);
+});
 
 /* ---------- 旧版单 key 数据迁移 ---------- */
 function legacySanitize(v) {

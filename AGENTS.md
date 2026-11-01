@@ -15,7 +15,7 @@ Tools-X 是 Chrome Extension（Manifest V3），纯浏览器运行，**没有后
 5. 禁止远程字体/外链 CSS（会阻塞渲染），只用系统字体栈。
 6. 保持一致 UI：新增弹窗、按钮、下拉、空状态一律复用 `core/` 中的既有组件与 class。
 
-## 1. 运行架构（三层）
+## 1. 运行架构（三层 + 后台）
 
 ```
 popup.html / popup.js          插件浮窗，列出工具，打开 app-window.html#/<tool>
@@ -23,9 +23,12 @@ popup.html / popup.js          插件浮窗，列出工具，打开 app-window.h
 app-window.html / app-window.js  宿主页：读写 chrome.storage.local、剪贴板、下载、fetch 代理
         ↓ <iframe sandbox>
 app.html + core/+tools/      工具主界面（无 chrome API，仅 postMessage）
+
+background.js                  MV3 service worker：Todo 提醒调度（chrome.alarms + chrome.notifications）
+widget/todo-widget.js          content script：所有 http/https 网页的悬浮 Todo 面板，直接读写 chrome.storage.local
 ```
 
-`preview/` 是独立的 content script，注入到用户用浏览器打开的本地 `file://` 页面（`all_frames:false`），与上面三层无耦合。
+`preview/` 是独立的 content script，注入到用户用浏览器打开的本地 `file://` 页面（`all_frames:false`），与上面三层无耦合。`widget/` 同样独立，只与 `chrome.storage.local` 中的 `toolsx.todo.*` 数据耦合。
 
 ### postMessage 协议（只允许使用这些 type）
 
@@ -40,27 +43,31 @@ app.html + core/+tools/      工具主界面（无 chrome API，仅 postMessage�
 | iframe → 宿主 | `TOOLSX_HTTP` / `TOOLSX_HTTP_ABORT` | Postman 请求与取消 |
 | 宿主 → iframe | `TOOLSX_HTTP_RES` | 请求结果 |
 | 宿主 → iframe | `TOOLSX_VIEW` | 复用标签页时切换工具 |
+| 宿主 → iframe | `TOOLSX_STORE_SYNC` | `keys`：外部（悬浮面板 / 后台）写入的存储变更，由 `core.js` 的 `onStoreSync` 分发 |
 
 新增能力必须同时改 `app-window.js`（处理并入 `switch` 链）与 `core/core.js` 的封装函数；不要在其他文件直接裸发 postMessage。
 
 ## 2. 目录与文件职责
 
 ```
-manifest.json        MV3 配置；改动 content_scripts / sandbox / host_permissions 时注意顺序
-app.html             主界面骨架 + 视图容器（#view-docs / #view-json / #view-api）+ 弹窗、toast 节点
+manifest.json        MV3 配置；改动 content_scripts / sandbox / host_permissions / background 时注意顺序
+app.html             主界面骨架 + 视图容器（#view-todo / #view-docs / #view-json / #view-api）+ 弹窗、toast 节点
 core/theme.css       仅设计变量（:root 浅色 / :root[data-theme="dark"]），无视觉规则 → 可全局注入
 core/core.css        通用组件：reset、body、滚动条、topbar/search、btn/icon-btn、page-head/toolbar/chip、
                      field、seg、csel*（自定义下拉）、modal/overlay/toast、docs-tools/mini、tree*、hide
 core/markdown.css    Markdown 渲染（.md 与 .tx-md 合并选择器）、代码高亮 .ck-*、.toc-item
 core/md-core.js      esc/unesc/hiCode/mdRender/mdOutline/tocHtml
-core/core.js         EMBEDDED 判定、STORE key 表、get/patch/removeKeys、旧数据迁移、prefs/主题、
-                     uid/toast/copy/openModal/closeModal、节点工具、ICO_* 图标、formatBytes/byteLen
+core/core.js         EMBEDDED 判定、STORE key 表、get/patch/removeKeys、onStoreSync（外部存储变更）、
+                     旧数据迁移、prefs/主题、uid/toast/copy/openModal/closeModal、节点工具、ICO_* 图标、formatBytes/byteLen
 core/ui.js           cselToggle/cselClose/cselValue/cselSelect、promptText/submitPromptText、downloadText
 core/json-view.js    jsonHi/jTree/jToggle（JSON 工具、Docs JSON 文档、Postman 响应共用）
 core/app.js          视图路由、全局搜索、flushAll、boot()（最后加载）
+tools/todo/todo.{css,js}      Todo：智能列表、任务行、任务详情、步骤、日期/提醒、悬浮按钮开关；todoInit()/renderTodo()/flushTodo()
 tools/docs/docs.{css,js}      Docs：目录树、编辑器、块级编辑、TOC；docsInit()
 tools/json/json.{css,js}      JSON 工具；renderJson()
 tools/postman/postman.{css,js} Postman；apiInit()/renderApi()
+widget/todo-widget.js        所有网页的 Todo 悬浮面板（content script，Shadow DOM；直接读写 chrome.storage.local）
+background.js                MV3 service worker：Todo 提醒排期（chrome.alarms）、系统通知（chrome.notifications）、打开 Todo 页
 preview/shell.css    预览页视觉（必须限定在 html[data-toolsx-preview] / body.tx-body）
 preview/shell.js     window.TXShell：主题、readSource、stats、toast、copyText、setMode、pageBar
 preview/md-page.js   本地 .md 渲染页（content script）
@@ -74,7 +81,8 @@ tests/               示例文件（test.md / test.json / test.jsonc），被 .g
 `app.html` 中 CSS：
 
 ```html
-core/theme.css → core/core.css → core/markdown.css → tools/<tool>/<tool>.css
+core/theme.css → core/core.css → core/markdown.css
+→ tools/todo/todo.css → tools/docs/docs.css → tools/json/json.css → tools/postman/postman.css
 ```
 
 样式表顺序即优先级；工具样式必须在 core 之后，才能覆盖通用规则。
@@ -83,7 +91,7 @@ core/theme.css → core/core.css → core/markdown.css → tools/<tool>/<tool>.c
 
 ```html
 core/md-core.js → core/core.js → core/ui.js → core/json-view.js
-→ tools/docs/docs.js → tools/json/json.js → tools/postman/postman.js
+→ tools/todo/todo.js → tools/docs/docs.js → tools/json/json.js → tools/postman/postman.js
 → core/app.js
 ```
 
@@ -94,6 +102,10 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 `manifest.json` 的 content_scripts 顺序：
 
 ```json
+// http/https：Todo 悬浮面板
+"js": ["widget/todo-widget.js"], "run_at": "document_idle"
+
+// file://：本地文件预览
 "js": ["core/md-core.js", "preview/shell.js", "preview/md-page.js", "preview/json-page.js"],
 "css": ["core/theme.css", "core/markdown.css", "preview/shell.css", "preview/json-page.css"]
 ```
@@ -103,6 +115,8 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 | 需求 | 用现成的 | 位置 |
 | --- | --- | --- |
 | 取/写/删存储 | `get` / `patch` / `removeKeys` / `keysByPrefix` | core/core.js |
+| 外部存储变更（悬浮面板 / 后台写入） | `onStoreSync(fn)` → 收到宿主页转发的 `TOOLSX_STORE_SYNC` | core/core.js |
+| Todo 提醒时间计算 | `todoRemindAt`（截止日期 + 默认 09:00 − 提前分钟） | tools/todo/todo.js（后台 `background.js` 里有同构实现，改动需同步） |
 | 主题、偏好 | `prefs`、`savePrefs`、`flushPrefs`、`applyTheme` | core/core.js |
 | toast、复制、弹窗骨架 | `toast` / `copy` / `openModal` / `closeModal` | core/core.js |
 | 命名输入弹窗 | `promptText({title,label,value,placeholder,ok,cancel,empty}, cb)` | core/ui.js |
@@ -127,6 +141,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - 英文按钮/标签加 `white-space: nowrap`，避免文案换行挤坏布局；侧栏宽度要给英文文案留够空间。
 - 媒体查询沿用现有断点：`1100px`（收起 TOC）、`1080px`（JSON 双栏转单栏）、`860px`（详情单列）、`820px`（Docs 单列）。
 - 新增视觉元素前先确认 `.core.css` 是否已有等价 class；禁止另造一套按钮/卡片风格。
+- `widget/` 的悬浮面板运行在任意网页里，样式写在 Shadow DOM 的 `<style>` 中并自带一套 `--tx-*` 局部变量（值抄自 `core/theme.css`），**不能**依赖主题变量注入，也不能写无前缀的全局选择器。
 
 ## 6. 数据与存储规范
 
@@ -137,6 +152,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - 读取时做兼容归一化（`Array.isArray(x)` 旧格式兼容、缺字段补默认），不要假设存储里是新结构。
 - 旧版单 key 数据（`toolsxData` / `aihubData`）的迁移在 `migrateLegacy()`；新增 key 时同步补充迁移逻辑。
 - 非扩展环境（直接打开 `app.html`）会自动退回 `localStorage`，逻辑必须两条路径都能跑。
+- Todo：`todoIndex`（任务列表）、`todoSession`（筛选 / 选中）、`todoSettings`（悬浮按钮开关 `widget` + 悬浮球位置 `widgetPos: {left, top}`）由前端写；`todoNotified`（id → 已提醒的 remindAt）**只由 `background.js` 写**，前端不得改动，避免与任务列表编辑互相覆盖。
 
 ## 7. 新增一个工具的步骤
 
@@ -149,7 +165,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 4. `core/core.js`：在 `STORE` 增加该工具的 key，并在 `migrateLegacy` 需要时扩展。
 5. 工具 JS 提供 `render<Name>()`（以及必要的 `Init`/`Flush`），全部交互只依赖 `core/` 的公共函数。
 6. `popup.html`：如该工具需要从浮窗直达，增加一个带 `data-tool="<name>"` 的入口（`popup.js` 自动绑定，无需改 JS）。
-7. `manifest.json`：只有新增 content script / 新权限时才改；网络类工具记得 `host_permissions`。
+7. `manifest.json`：只有新增 content script / 新权限 / 后台脚本时才改；网络类工具记得 `host_permissions`，提醒类工具需 `notifications` + `alarms` 并在 `background.js` 注册对应监听。
 8. 第 9 节验证通过后，按第 10 节更新 AGENTS.md 与 README.md。
 
 ## 8. 修改现有工具的注意点
@@ -157,6 +173,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 - Docs：正文按 key 懒加载（`docCache` + `loadDoc`），切换/离开前必须 `flushDocSaves()`；预览块编辑依赖 `splitBlocks` 的块边界，改 Markdown 渲染时不要破坏 `.blk` 结构。
 - JSON：格式化/压缩/转义/还原/比对全部在前端完成；折叠树靠 `.jt-node.closed` 切换 `.jt-kids` 与 `.jt-ell`，收起数组时右侧要显示灰色元素数量。
 - Postman：详情修改 400ms 防抖自动保存（`apiAutoSave`/`apiPersistCurrent`），地址被清空时不得覆盖已保存内容；改请求结构时同步 `apiSnapshot`、导入导出格式（`url/method/headers/body`）与 `apiNorm*` 归一化。
+- Todo：任务保存 300ms 防抖（`todoSave`）、会话 150ms（`todoSaveSession`），离开视图与页面隐藏都会 `flushTodo()`；`todoNorm` 里补默认字段并重算 `remindAt`，改字段时务必同步 `todoNorm`、`background.js` 的 `remindAtOf` 与 `widget/todo-widget.js` 的 `norm`。提醒时间口径：未设置时间按 09:00，提前量单位为分钟，`'none'` 表示不提醒。悬浮面板默认在右上角，拖动结束后把坐标写入 `widgetPos`；工具页改 `widget` 开关时必须保留其他 settings 字段（`Object.assign({}, todoSettings, { widget })`），否则悬浮球位置会丢失。
 - 预览页：所有视觉规则必须限定在 `html[data-toolsx-preview]` 或 `body.tx-body` 之下，**绝不允许写无前缀的全局标签选择器**（会污染用户的普通 `file://` 页面）。`core/theme.css` 只定义变量，因此允许直接注入。
 - 文案语言：Docs / JSON 工具与预览页为中文；Postman 页面（含按钮、空状态、搜索提示）全部英文。
 
@@ -164,7 +181,7 @@ core/md-core.js → core/core.js → core/ui.js → core/json-view.js
 
 ```bash
 # 1) 语法
-for f in core/*.js tools/*/*.js preview/*.js app-window.js popup.js; do node --check "$f"; done
+for f in core/*.js tools/*/*.js preview/*.js widget/*.js app-window.js popup.js background.js; do node --check "$f"; done
 
 # 2) manifest
 python3 -c "import json;json.load(open('manifest.json'));print('manifest ok')"
@@ -176,6 +193,9 @@ python3 -m http.server 8771 --bind 127.0.0.1
 
 浏览器实测至少覆盖：
 
+- Todo：新建 / 完成 / 星标 / 我的一天、任务详情与步骤、日期时间与提醒下拉、清除已完成、刷新后数据仍在、深色模式；直接打开 `app.html` 时提醒退化为页面内通知。
+- Todo 悬浮面板（扩展内）：刷新扩展后**新开标签页**打开任意 https 网页，检查右上角按钮、今日数量、快捷添加、勾选完成、打开完整页面、隐藏按钮；拖动悬浮球后位置应跨页面保留，面板自动避让到视口内；在工具页改任务后悬浮面板应实时同步。
+- 系统通知：设置一条 1～2 分钟后的提醒，关闭工具页后仍能收到通知；点击通知应打开 Todo 页。
 - Docs：目录树展开/收起、拖拽、新建/重命名弹窗（`promptText`）、源码/预览切换、自动保存后刷新仍在。
 - JSON：格式化/压缩/转义/还原/比对、结果折叠与搜索、深色模式。
 - Postman：`.csel` 下拉开合与方法配色、新建文件夹/请求弹窗、Params/Headers/Body 编辑与自动保存、导出下载、响应保存为示例。
@@ -217,3 +237,6 @@ python3 -m http.server 8771 --bind 127.0.0.1
 - 刷新扩展后旧 content script 仍可能留在已打开的标签页，预览页需**新开标签页**验证。
 - iframe 初始化依赖 `TOOLSX_READY` → `TOOLSX_INIT`，不要在 `storeInit()` 之前读 `get()` 的值。
 - 传统脚本共享作用域：复制粘贴代码段时极易产生重复 `const`/`function` 声明，改完 grep 一次符号名。
+- `background.js` 只写 `toolsx.todo.notified`，不要让它回写 `toolsx.todo.tasks`，否则会覆盖用户正在编辑的任务；`app-window.js` 用 `lastWrites` 值比对抑制自身写入回声，新增同步逻辑时保持这一机制。
+- MV3 service worker 会被回收，所有定时提醒都必须走 `chrome.alarms`（不要在后台用 `setInterval`）；每次任务变化后都要重新 `chrome.alarms.clear` + `create` 排期。
+- `widget/todo-widget.js` 是 content script：改完必须**刷新扩展并新开标签页**才生效；它直接写 storage，绕过 sandbox，因此工具页依赖 `TOOLSX_STORE_SYNC` 才能看到变化。

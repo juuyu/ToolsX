@@ -24,9 +24,11 @@ async function readStore() {
 }
 
 /* 逐 key 覆盖写入：只改动真正变化的那部分数据 */
+const lastWrites = new Map();
 function writeStore(patch) {
   const map = patch || {};
   if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    Object.keys(map).forEach((k) => { try { lastWrites.set(k, JSON.stringify(map[k])); } catch (e) {} });
     chrome.storage.local.set(map);
     return;
   }
@@ -36,10 +38,30 @@ function writeStore(patch) {
 function removeStore(keys) {
   const list = Array.isArray(keys) ? keys : [];
   if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+    list.forEach((k) => lastWrites.delete(k));
     chrome.storage.local.remove(list);
     return;
   }
   try { list.forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+}
+
+/* 外部（网页悬浮面板 content script）改动了同一份数据时，同步给 sandbox 页面 */
+if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    const keys = {};
+    let any = false;
+    Object.keys(changes || {}).forEach((k) => {
+      if (k.indexOf(STORE_PREFIX) !== 0) return;
+      const next = changes[k] && changes[k].newValue;
+      let raw;
+      try { raw = JSON.stringify(next); } catch (e) {}
+      if (lastWrites.has(k) && lastWrites.get(k) === raw) { lastWrites.delete(k); return; }
+      keys[k] = next;
+      any = true;
+    });
+    if (any) frame.contentWindow?.postMessage({ type: 'TOOLSX_STORE_SYNC', keys }, '*');
+  });
 }
 
 let initSent = false;
@@ -136,4 +158,4 @@ window.addEventListener('hashchange', () => {
   if (m) frame.contentWindow?.postMessage({ type: 'TOOLSX_VIEW', view: m[1] }, '*');
 });
 
-frame.src = 'app.html' + (location.hash || '#/docs');
+frame.src = 'app.html' + (location.hash || '#/todo');
